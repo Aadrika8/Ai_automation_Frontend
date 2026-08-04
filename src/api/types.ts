@@ -37,6 +37,8 @@ export interface LayerSnapshot {
   total: number
   passed: number
   failed: number
+  /** of the failed tests, how many are pre-existing tracked bugs */
+  knownBugs: number
   running: number
   skipped: number
   passRate: number
@@ -48,6 +50,17 @@ export interface HistoryPoint {
   daysAgo: number
   passRate: number
   runs: number
+}
+
+export interface HourPoint {
+  hoursAgo: number
+  passRate: number
+  runs: number
+}
+
+export interface SuiteVersion {
+  current: string
+  lastUpdated: string
 }
 
 export type RunStatus = 'Completed' | 'Running' | 'Failed'
@@ -68,6 +81,9 @@ export interface LayerDashboard {
   snapshot: LayerSnapshot
   /** 90 days, oldest first */
   history: HistoryPoint[]
+  /** last 24 hours, oldest first */
+  hourly: HourPoint[]
+  version: SuiteVersion
   recentRuns: RunSummary[]
 }
 
