@@ -2,7 +2,7 @@
    stable across reloads. Deleted wholesale when the FastAPI backend lands. */
 import type {
   AppId, AppSummary, LayerDashboard, LayerId, LayerInfo, LayerSnapshot,
-  HistoryPoint, RunStatus, RunSummary, TestCaseRow, TestDetail, TestStatus,
+  HistoryPoint, HourPoint, RunStatus, RunSummary, TestCaseRow, TestDetail, TestStatus,
 } from '../types'
 
 /* ---------- deterministic PRNG ---------- */
@@ -89,6 +89,8 @@ const ERROR_TEMPLATES = [
 interface LayerModel {
   snapshot: LayerSnapshot
   history: HistoryPoint[]
+  hourly: HourPoint[]
+  version: { current: string; lastUpdated: string }
   recentRuns: RunSummary[]
 }
 
@@ -136,9 +138,28 @@ function layerModel(appId: AppId, layerId: LayerId): LayerModel {
     }
   })
 
+  const knownBugs = Math.min(failed, Math.round(failed * (0.25 + r() * 0.35)))
+
+  // last 24 hours: walk backwards from the current pass rate
+  const hourly: HourPoint[] = []
+  let hourPr = cur
+  for (let h = 0; h < 24; h++) {
+    hourly.unshift({ hoursAgo: h, passRate: +hourPr.toFixed(1), runs: Math.floor(r() * 3) })
+    hourPr = Math.min(99.6, Math.max(78, hourPr + (r() - 0.5) * 0.8))
+  }
+
+  const updatedDaysAgo = 1 + Math.floor(r() * 13)
+  const version = {
+    current: `${RELEASES[appId][0]}.${1 + Math.floor(r() * 8)}`,
+    lastUpdated: new Date(Date.now() - updatedDaysAgo * 864e5)
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+  }
+
   const model: LayerModel = {
-    snapshot: { total, passed, failed, running, skipped, passRate: cur, deltaVsLastWeek: +(cur - weekAgo).toFixed(1) },
+    snapshot: { total, passed, failed, knownBugs, running, skipped, passRate: cur, deltaVsLastWeek: +(cur - weekAgo).toFixed(1) },
     history,
+    hourly,
+    version,
     recentRuns,
   }
   layerModels.set(key, model)
