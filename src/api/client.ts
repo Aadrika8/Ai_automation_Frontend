@@ -1,86 +1,93 @@
-/* The single seam between the UI and data.
-   Today every function serves seeded mock fixtures with simulated latency.
-   When the FastAPI backend lands, ONLY the bodies here change to fetch()
-   calls (each is annotated with its future endpoint) and mock/ is deleted. */
+/* The single seam between the UI and data — real HTTP client for the
+   FastAPI backend. Each function maps 1:1 to a backend endpoint. */
 import type {
   AppId, AppSettings, AppSummary, LayerDashboard, LayerId, LayerInfo,
   ManagedUser, RunSummary, TestCaseRow, TestDetail, User,
 } from './types'
-import {
-  DEFAULT_SETTINGS, fxAllRuns, fxApplications, fxLayerDashboard,
-  fxLayers, fxTestCases, fxTestDetail,
-} from './mock/fixtures'
-import { CREDENTIALS, MANAGED_USERS } from './mock/users'
 
-const delay = (ms = 150 + Math.random() * 300) => new Promise(res => setTimeout(res, ms))
+const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const SESSION_KEY = 'qi.session'
 
-const SETTINGS_KEY = 'qi.settings'
+function readToken(): string | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY)
+    return raw ? (JSON.parse(raw).token ?? null) : null
+  } catch {
+    return null
+  }
+}
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const token = readToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  let res: Response
+  try {
+    res = await fetch(`${BASE}/api${path}`, { ...init, headers })
+  } catch {
+    throw new Error('Cannot reach the API — is the backend running?')
+  }
+
+  if (res.status === 401 && !path.startsWith('/auth/')) {
+    // expired/invalid session: force a clean re-login
+    localStorage.removeItem(SESSION_KEY)
+    location.assign('/login')
+    throw new Error('Session expired')
+  }
+  if (!res.ok) {
+    const detail = await res.json().then(body => body?.detail).catch(() => null)
+    throw new Error(typeof detail === 'string' ? detail : `Request failed (${res.status})`)
+  }
+  return res.json()
+}
 
 // POST /api/auth/login
-export async function login(username: string, password: string): Promise<User> {
-  await delay(350)
-  const match = CREDENTIALS.find(c => c.username === username.trim() && c.password === password)
-  if (!match) throw new Error('Invalid username or password')
-  const { password: _pw, ...user } = match
-  return user
+export function login(username: string, password: string): Promise<{ token: string; user: User }> {
+  return request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) })
 }
 
 // GET /api/apps
-export async function getApplications(): Promise<AppSummary[]> {
-  await delay()
-  return fxApplications()
+export function getApplications(): Promise<AppSummary[]> {
+  return request('/apps')
 }
 
 // GET /api/apps/{appId}/layers
-export async function getLayers(appId: AppId): Promise<LayerInfo[]> {
-  await delay()
-  return fxLayers(appId)
+export function getLayers(appId: AppId): Promise<LayerInfo[]> {
+  return request(`/apps/${appId}/layers`)
 }
 
 // GET /api/apps/{appId}/layers/{layerId}/dashboard
-export async function getLayerDashboard(appId: AppId, layerId: LayerId): Promise<LayerDashboard> {
-  await delay()
-  return fxLayerDashboard(appId, layerId)
+export function getLayerDashboard(appId: AppId, layerId: LayerId): Promise<LayerDashboard> {
+  return request(`/apps/${appId}/layers/${layerId}/dashboard`)
 }
 
 // GET /api/apps/{appId}/layers/{layerId}/tests
-export async function getTestCases(appId: AppId, layerId: LayerId): Promise<TestCaseRow[]> {
-  await delay()
-  return fxTestCases(appId, layerId)
+export function getTestCases(appId: AppId, layerId: LayerId): Promise<TestCaseRow[]> {
+  return request(`/apps/${appId}/layers/${layerId}/tests`)
 }
 
 // GET /api/tests/{testId}
-export async function getTestDetail(testId: string): Promise<TestDetail> {
-  await delay()
-  const detail = fxTestDetail(testId)
-  if (!detail) throw new Error('Test case not found')
-  return detail
+export function getTestDetail(testId: string): Promise<TestDetail> {
+  return request(`/tests/${encodeURIComponent(testId)}`)
 }
 
 // GET /api/runs
-export async function getRuns(): Promise<RunSummary[]> {
-  await delay()
-  return fxAllRuns()
+export function getRuns(): Promise<RunSummary[]> {
+  return request('/runs')
 }
 
 // GET /api/settings
-export async function getSettings(): Promise<AppSettings> {
-  await delay(120)
-  try {
-    const stored = localStorage.getItem(SETTINGS_KEY)
-    if (stored) return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) }
-  } catch { /* fall through to defaults */ }
-  return { ...DEFAULT_SETTINGS }
+export function getSettings(): Promise<AppSettings> {
+  return request('/settings')
 }
 
 // PUT /api/settings
 export async function saveSettings(settings: AppSettings): Promise<void> {
-  await delay(250)
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+  await request('/settings', { method: 'PUT', body: JSON.stringify(settings) })
 }
 
 // GET /api/users
-export async function getUsers(): Promise<ManagedUser[]> {
-  await delay()
-  return MANAGED_USERS
+export function getUsers(): Promise<ManagedUser[]> {
+  return request('/users')
 }
