@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthValue | null>(null)
 function readSession(): User | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY)
-    return raw ? (JSON.parse(raw) as User) : null
+    return raw ? ((JSON.parse(raw) as { user?: User }).user ?? null) : null
   } catch {
     return null
   }
@@ -25,10 +25,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(readSession)
 
   const login = useCallback(async (username: string, password: string) => {
-    const u = await api.login(username, password)
-    localStorage.setItem(SESSION_KEY, JSON.stringify(u))
-    setUser(u)
-    return u
+    const session = await api.login(username, password) // {token, user}
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    setUser(session.user)
+    return session.user
   }, [])
 
   const logout = useCallback(() => {

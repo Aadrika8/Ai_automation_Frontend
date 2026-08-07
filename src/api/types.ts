@@ -1,5 +1,8 @@
 export type Role = 'manager' | 'qa' | 'admin'
 
+/** Hierarchical role ranks: manager ⊂ qa ⊂ admin (mirrors the backend). */
+export const ROLE_RANK: Record<Role, number> = { manager: 0, qa: 1, admin: 2 }
+
 export interface User {
   username: string
   name: string
