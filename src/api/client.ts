@@ -1,7 +1,7 @@
 /* The single seam between the UI and data — real HTTP client for the
    FastAPI backend. Each function maps 1:1 to a backend endpoint. */
 import type {
-  AppId, AppSettings, AppSummary, LayerDashboard, LayerId, LayerInfo,
+  AiReport, AppId, AppSettings, AppSummary, LayerDashboard, LayerId, LayerInfo,
   ManagedUser, RunSummary, TestCaseRow, TestDetail, User,
 } from './types'
 
@@ -90,4 +90,10 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
 // GET /api/users
 export function getUsers(): Promise<ManagedUser[]> {
   return request('/users')
+}
+
+// POST /api/apps/{appId}/layers/{layerId}/report — server caches by data hash,
+// so repeat calls are free until the underlying data changes
+export function generateReport(appId: AppId, layerId: LayerId, force = false): Promise<AiReport> {
+  return request(`/apps/${appId}/layers/${layerId}/report${force ? '?force=true' : ''}`, { method: 'POST' })
 }

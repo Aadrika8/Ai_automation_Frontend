@@ -6,7 +6,7 @@ interface DataState<T> {
   error: string | null
 }
 
-/** Minimal fetch-on-mount hook for the mock API. */
+/** Minimal fetch-on-mount hook for the API. */
 export function useData<T>(fetcher: () => Promise<T>, deps: readonly unknown[]): DataState<T> {
   const [state, setState] = useState<DataState<T>>({ data: null, loading: true, error: null })
 

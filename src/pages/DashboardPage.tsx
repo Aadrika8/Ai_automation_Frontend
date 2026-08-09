@@ -70,6 +70,14 @@ export function DashboardPage() {
           <PageTitle lede={`${appName} · latest consolidated results across this layer.`}>{layerName}</PageTitle>
         </div>
         <div className="flex flex-col items-end gap-2">
+          {hasRole('qa') && (
+            <Link
+              to={`/apps/${appId}/${layerId}/report`}
+              className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-3.5 py-2 rounded-lg bg-accent text-white hover:opacity-90"
+            >
+              ✦ Generate Report
+            </Link>
+          )}
           <span className="inline-flex items-center gap-2 text-[12.5px] font-semibold px-3 py-1.5 rounded-full bg-surface border border-hairline">
             <i className="w-2.5 h-2.5 rounded-[3px]" style={{ background: `var(${LAYER_COLOR[layerId as LayerId]})` }} />
             {appName} · {layerName.split(' ')[0]}
