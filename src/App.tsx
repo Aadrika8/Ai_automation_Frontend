@@ -11,6 +11,7 @@ import { TestDetailPage } from './pages/TestDetailPage'
 import { RunsPage } from './pages/RunsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { UsersPage } from './pages/UsersPage'
+import { ReportPage } from './pages/ReportPage'
 
 export default function App() {
   return (
@@ -21,6 +22,10 @@ export default function App() {
 
           {/* any authenticated user */}
           <Route element={<RequireRole minRole="manager" />}>
+            {/* full-page report (outside AppLayout so the printed PDF has no app chrome) */}
+            <Route element={<RequireRole minRole="qa" />}>
+              <Route path="/apps/:appId/:layerId/report" element={<ReportPage />} />
+            </Route>
             <Route element={<AppLayout />}>
               <Route path="/apps" element={<ApplicationsPage />} />
               <Route path="/apps/:appId/pyramid" element={<PyramidPage />} />

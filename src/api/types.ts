@@ -138,3 +138,20 @@ export interface ManagedUser {
   role: Role
   lastActive: string
 }
+
+export interface ReportIssue {
+  title: string
+  affectedTests: number
+  likelyCauses: string[]
+  suggestedFixes: string[]
+}
+
+export interface AiReport {
+  summary: string
+  healthAssessment: string
+  topIssues: ReportIssue[]
+  recommendations: string[]
+  generatedAt: string
+  model: string
+  cached: boolean
+}
