@@ -16,13 +16,7 @@ npm install
 npm run dev        # → http://localhost:5173
 ```
 
-## Demo accounts (hardcoded until real auth)
 
-| Role | Username | Password | Sees |
-|---|---|---|---|
-| Manager | `manager` | `manager123` | Applications → Pyramid → high-level dashboards only |
-| QA | `qa` | `qa123` | + test-case drill-down, failure details/stack traces, Runs |
-| Admin | `admin` | `admin123` | + Settings, Users |
 
 Roles are hierarchical (manager ⊂ qa ⊂ admin); route guards redirect
 unauthorized URLs to `/apps` and unauthenticated ones to `/login`
