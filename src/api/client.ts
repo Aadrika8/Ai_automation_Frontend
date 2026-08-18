@@ -1,8 +1,8 @@
 /* The single seam between the UI and data — real HTTP client for the
    FastAPI backend. Each function maps 1:1 to a backend endpoint. */
 import type {
-  AiReport, AppId, AppSettings, AppSummary, LayerDashboard, LayerId, LayerInfo,
-  ManagedUser, RunSummary, TestCaseRow, TestDetail, User,
+  AppCreate, AppSettings, AppSummary, LayerCreate, LayerDashboardResponse,
+  LayerInfo, LayerRecordsResponse, ManagedUser, UploadResult, User, UserCreate,
 } from './types'
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
@@ -17,8 +17,7 @@ function readToken(): string | null {
   }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+async function send<T>(path: string, init: RequestInit, headers: Record<string, string>): Promise<T> {
   const token = readToken()
   if (token) headers.Authorization = `Bearer ${token}`
 
@@ -39,7 +38,17 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const detail = await res.json().then(body => body?.detail).catch(() => null)
     throw new Error(typeof detail === 'string' ? detail : `Request failed (${res.status})`)
   }
+  if (res.status === 204) return undefined as T
   return res.json()
+}
+
+function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return send(path, init, { 'Content-Type': 'application/json' })
+}
+
+/* multipart: no Content-Type header — the browser sets it with the boundary */
+function requestForm<T>(path: string, form: FormData, method = 'POST'): Promise<T> {
+  return send(path, { method, body: form }, {})
 }
 
 // POST /api/auth/login
@@ -52,29 +61,66 @@ export function getApplications(): Promise<AppSummary[]> {
   return request('/apps')
 }
 
+// POST /api/apps (admin)
+export function createApp(body: AppCreate): Promise<AppSummary> {
+  return request('/apps', { method: 'POST', body: JSON.stringify(body) })
+}
+
+// DELETE /api/apps/{appId} (admin)
+export function deleteApp(appId: string): Promise<void> {
+  return request(`/apps/${appId}`, { method: 'DELETE' })
+}
+
 // GET /api/apps/{appId}/layers
-export function getLayers(appId: AppId): Promise<LayerInfo[]> {
+export function getLayers(appId: string): Promise<LayerInfo[]> {
   return request(`/apps/${appId}/layers`)
 }
 
+// POST /api/apps/{appId}/layers (admin)
+export function createLayer(appId: string, body: LayerCreate): Promise<LayerInfo> {
+  return request(`/apps/${appId}/layers`, { method: 'POST', body: JSON.stringify(body) })
+}
+
+// DELETE /api/apps/{appId}/layers/{layerId} (admin)
+export function deleteLayer(appId: string, layerId: string): Promise<void> {
+  return request(`/apps/${appId}/layers/${layerId}`, { method: 'DELETE' })
+}
+
+// POST /api/apps/{appId}/layers/{layerId}/uploads (qa+)
+// mode 'merge' upserts into the existing rows; 'replace' wipes the layer first
+export function uploadLayerExcel(
+  appId: string, layerId: string, file: File, mode: 'merge' | 'replace' = 'merge',
+): Promise<UploadResult> {
+  const form = new FormData()
+  form.append('file', file)
+  return requestForm(`/apps/${appId}/layers/${layerId}/uploads?mode=${mode}`, form)
+}
+
+// GET /api/apps/{appId}/layers/{layerId}/records
+export function getLayerRecords(
+  appId: string, layerId: string,
+  opts: { search?: string; section?: string; page?: number; pageSize?: number } = {},
+): Promise<LayerRecordsResponse> {
+  const params = new URLSearchParams()
+  if (opts.search) params.set('search', opts.search)
+  if (opts.section) params.set('section', opts.section)
+  if (opts.page) params.set('page', String(opts.page))
+  if (opts.pageSize) params.set('pageSize', String(opts.pageSize))
+  const qs = params.toString()
+  return request(`/apps/${appId}/layers/${layerId}/records${qs ? `?${qs}` : ''}`)
+}
+
 // GET /api/apps/{appId}/layers/{layerId}/dashboard
-export function getLayerDashboard(appId: AppId, layerId: LayerId): Promise<LayerDashboard> {
+export function getLayerDashboard(appId: string, layerId: string): Promise<LayerDashboardResponse> {
   return request(`/apps/${appId}/layers/${layerId}/dashboard`)
 }
 
-// GET /api/apps/{appId}/layers/{layerId}/tests
-export function getTestCases(appId: AppId, layerId: LayerId): Promise<TestCaseRow[]> {
-  return request(`/apps/${appId}/layers/${layerId}/tests`)
-}
-
-// GET /api/tests/{testId}
-export function getTestDetail(testId: string): Promise<TestDetail> {
-  return request(`/tests/${encodeURIComponent(testId)}`)
-}
-
-// GET /api/runs
-export function getRuns(): Promise<RunSummary[]> {
-  return request('/runs')
+// DELETE /api/apps/{appId}/layers/{layerId}/records (admin)
+// scope 'all' purges the layer's data; 'last' removes only the latest upload
+export function clearLayerRecords(
+  appId: string, layerId: string, scope: 'all' | 'last' = 'all',
+): Promise<{ deleted: number; scope: string }> {
+  return request(`/apps/${appId}/layers/${layerId}/records?scope=${scope}`, { method: 'DELETE' })
 }
 
 // GET /api/settings
@@ -92,8 +138,12 @@ export function getUsers(): Promise<ManagedUser[]> {
   return request('/users')
 }
 
-// POST /api/apps/{appId}/layers/{layerId}/report — server caches by data hash,
-// so repeat calls are free until the underlying data changes
-export function generateReport(appId: AppId, layerId: LayerId, force = false): Promise<AiReport> {
-  return request(`/apps/${appId}/layers/${layerId}/report${force ? '?force=true' : ''}`, { method: 'POST' })
+// POST /api/users (admin)
+export function createUser(body: UserCreate): Promise<ManagedUser> {
+  return request('/users', { method: 'POST', body: JSON.stringify(body) })
+}
+
+// DELETE /api/users/{username} (admin)
+export function deleteUser(username: string): Promise<void> {
+  return request(`/users/${encodeURIComponent(username)}`, { method: 'DELETE' })
 }

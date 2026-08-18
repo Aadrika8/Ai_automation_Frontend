@@ -10,7 +10,7 @@ export function BarsChart({ data, unitName }: { data: BarPoint[]; unitName: stri
   return (
     <div className="h-[230px]">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: -28 }}>
+        <BarChart data={data} margin={{ top: 12, right: 8, bottom: 0, left: 8 }}>
           <CartesianGrid vertical={false} stroke="var(--grid)" strokeWidth={1} />
           <XAxis
             dataKey="label"
