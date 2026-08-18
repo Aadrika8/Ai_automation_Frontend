@@ -2,7 +2,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ---------- design tokens (ported from pyramid_dashboard demo) ---------- */
+/* ---------- design tokens ---------- */
 :root {
   --page: #f9f9f7;
   --surface: #fcfcfb;
@@ -14,7 +14,7 @@
   --hairline: rgba(11, 11, 11, 0.10);
   --accent: #2a78d6;
   --accent-soft: rgba(42, 120, 214, 0.10);
-  /* ordinal blue ramp — pyramid tiers, light→dark with magnitude */
+  /* ordinal blue ramp — layer accent palette (assigned by layer order) */
   --tier-e2e: #86b6ef;
   --tier-system: #5598e7;
   --tier-integration: #2a78d6;

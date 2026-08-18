@@ -1,15 +1,30 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { ThemeToggle } from '../components/ThemeToggle'
-import { LogoutIcon, PyramidLogo } from '../components/icons'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ArrowLeftIcon, LogoutIcon, PyramidLogo } from '../components/icons'
 import { cx } from '../lib/format'
 import { NAV_ITEMS } from './nav'
 
 const ROLE_LABEL: Record<string, string> = { admin: 'Admin', qa: 'QA', manager: 'Manager' }
 
+/** Hierarchical "up" target for the global back button; null on the root page. */
+function parentPath(pathname: string): string | null {
+  if (pathname === '/apps') return null
+  if (pathname.startsWith('/apps/')) {
+    const segments = pathname.split('/').filter(Boolean) // ['apps', appId, 'layers', layerId]
+    return segments.length >= 4 ? `/apps/${segments[1]}` : '/apps'
+  }
+  return '/apps' // settings, users, anything else
+}
+
 export function AppLayout() {
   const { user, logout, hasRole } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [confirmLogout, setConfirmLogout] = useState(false)
+  const backTo = parentPath(location.pathname)
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -45,7 +60,7 @@ export function AppLayout() {
                 {user.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
               </span>
               <button
-                onClick={() => { logout(); navigate('/login') }}
+                onClick={() => setConfirmLogout(true)}
                 aria-label="Log out"
                 className="p-2 rounded-lg text-ink2 hover:bg-critical/10 hover:text-crit-text transition-colors"
               >
@@ -57,12 +72,32 @@ export function AppLayout() {
       </header>
 
       <main className="flex-1 w-full max-w-[1180px] mx-auto px-6 py-8">
+        {backTo && (
+          <button
+            onClick={() => navigate(backTo)}
+            className="flex items-center gap-1.5 text-[13px] font-semibold text-ink2 mb-4 px-2 py-1.5 -ml-2
+                       rounded-lg hover:bg-accent-soft hover:text-accent transition-colors"
+          >
+            <ArrowLeftIcon size={14} /> Back
+          </button>
+        )}
         <Outlet />
       </main>
 
+      {confirmLogout && (
+        <ConfirmDialog
+          title="Log out?"
+          confirmLabel="Log out"
+          onClose={() => setConfirmLogout(false)}
+          onConfirm={async () => { logout(); navigate('/login') }}
+        >
+          Are you sure you want to log out of Quality Insights?
+        </ConfirmDialog>
+      )}
+
       <footer className="border-t border-grid py-4">
         <div className="max-w-[1180px] mx-auto px-6 text-xs text-muted">
-          Demo · all figures are simulated. Real data arrives with the backend integration.
+          Quality Insights · data is ingested from the test team’s Excel sheets per layer.
         </div>
       </footer>
     </div>

@@ -9,117 +9,105 @@ export interface User {
   role: Role
 }
 
-export type AppId = 'hrms' | 'cellsens' | 'preciv'
-export type LayerId = 'unit' | 'integration' | 'system' | 'e2e'
-export type AppIcon = 'people' | 'scope' | 'ruler'
+/** A cell value from an ingested spreadsheet. */
+export type CellValue = string | number | null
+
+export interface ColumnDef {
+  /** sanitized data key, e.g. "test_count" */
+  key: string
+  /** original header label, e.g. "Test Count" */
+  label: string
+  type: 'string' | 'number'
+}
 
 export interface AppSummary {
-  id: AppId
+  id: string
   name: string
   tag: string
   desc: string
-  icon: AppIcon
-  totalTests: number
-  passRate: number
+  icon: string
+  layerCount: number
+  recordCount: number
+}
+
+export interface AppCreate {
+  name: string
+  tag?: string
+  desc?: string
+  icon?: string
 }
 
 export interface LayerInfo {
-  id: LayerId
+  id: string
   name: string
   short: string
-  /** approximate share of all tests, 0..1 */
-  share: number
   desc: string
-  /** css custom property carrying the tier color */
-  colorVar: string
-  testCount: number
-  passRate: number
+  order: number
+  recordCount: number
+  lastUploadAt: string | null
+  lastUploadFile: string | null
 }
 
-export interface LayerSnapshot {
-  total: number
-  passed: number
-  failed: number
-  /** of the failed tests, how many are pre-existing tracked bugs */
-  knownBugs: number
-  running: number
-  skipped: number
-  passRate: number
-  /** percentage-point change vs 7 days ago */
-  deltaVsLastWeek: number
-}
-
-export interface HistoryPoint {
-  daysAgo: number
-  passRate: number
-  runs: number
-}
-
-export interface HourPoint {
-  hoursAgo: number
-  passRate: number
-  runs: number
-}
-
-export interface SuiteVersion {
-  current: string
-  lastUpdated: string
-}
-
-export type RunStatus = 'Completed' | 'Running' | 'Failed'
-
-export interface RunSummary {
-  id: string
-  appId: AppId
-  layerId: LayerId
+export interface LayerCreate {
   name: string
-  when: string
-  total: number
-  passed: number
-  durationMin: number
-  status: RunStatus
+  short?: string
+  desc?: string
 }
 
-export interface LayerDashboard {
-  snapshot: LayerSnapshot
-  /** 90 days, oldest first */
-  history: HistoryPoint[]
-  /** last 24 hours, oldest first */
-  hourly: HourPoint[]
-  version: SuiteVersion
-  recentRuns: RunSummary[]
+export interface UploadResult {
+  uploadId: string
+  fileName: string
+  columns: ColumnDef[]
+  sections: string[]
+  totalRows: number
+  inserted: number
+  updated: number
+  unchanged: number
+  duplicatesSkipped: number
+  uploadedBy: string
+  uploadedAt: string
 }
 
-export type TestStatus = 'Passed' | 'Failed' | 'Running' | 'Skipped'
+export interface RecordRow {
+  section: string
+  data: Record<string, CellValue>
+}
 
-export interface TestCaseRow {
-  id: string
+export interface SectionGroup {
   name: string
-  suite: string
-  release: string
-  status: TestStatus
-  durationS: number
-  lastRun: string
+  rowCount: number
+  rows: RecordRow[]
 }
 
-export interface TestRunRecord {
-  when: string
-  status: TestStatus
-  durationS: number
+export interface LayerRecordsResponse {
+  columns: ColumnDef[]
+  lastUpload: UploadResult | null
+  total: number
+  page: number
+  pageSize: number
+  sections: SectionGroup[]
 }
 
-export interface TestFailureDetail {
-  errorMessage: string
-  failingStep: string
-  stackTrace: string
+export interface SectionAggregate {
+  section: string
+  rowCount: number
+  sums: Record<string, number>
 }
 
-export interface TestDetail extends TestCaseRow {
-  appId: AppId
-  layerId: LayerId
-  path: string
-  history: TestRunRecord[]
-  failure?: TestFailureDetail
+export interface TopRow {
+  section: string
+  label: string
+  value: number
+}
+
+export interface LayerDashboardResponse {
+  lastUpload: UploadResult | null
+  totalRows: number
+  sectionCount: number
+  numericColumns: ColumnDef[]
+  totals: Record<string, number>
+  bySection: SectionAggregate[]
+  topRows: TopRow[]
 }
 
 export interface AppSettings {
@@ -136,22 +124,12 @@ export interface ManagedUser {
   username: string
   name: string
   role: Role
-  lastActive: string
+  lastActive: string | null
 }
 
-export interface ReportIssue {
-  title: string
-  affectedTests: number
-  likelyCauses: string[]
-  suggestedFixes: string[]
-}
-
-export interface AiReport {
-  summary: string
-  healthAssessment: string
-  topIssues: ReportIssue[]
-  recommendations: string[]
-  generatedAt: string
-  model: string
-  cached: boolean
+export interface UserCreate {
+  username: string
+  name: string
+  password: string
+  role: Role
 }

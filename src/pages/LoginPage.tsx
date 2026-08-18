@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Card } from '../components/ui'
 import { PyramidLogo } from '../components/icons'
@@ -13,17 +13,14 @@ const DEMO_USERS = [
 export function LoginPage() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
-  const from = (location.state as { from?: string } | null)?.from ?? '/apps'
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  // honor the deep-link target here too — this render races navigate(from)
-  // after login, and both must agree on the destination
-  if (user) return <Navigate to={from} replace />
+  // every sign-in starts from the applications page
+  if (user) return <Navigate to="/apps" replace />
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -31,7 +28,7 @@ export function LoginPage() {
     setError(null)
     try {
       await login(username, password)
-      navigate(from, { replace: true })
+      navigate('/apps', { replace: true })
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -50,7 +47,7 @@ export function LoginPage() {
         </div>
         <Card className="p-7">
           <h1 className="text-lg font-semibold tracking-tight">Sign in</h1>
-          <p className="text-[12.5px] text-muted mt-0.5 mb-5">Testing Pyramid dashboards for your products</p>
+          <p className="text-[12.5px] text-muted mt-0.5 mb-5">Quality dashboards for your products</p>
           <form onSubmit={submit} className="space-y-4">
             <label className="block">
               <span className="text-xs font-medium text-ink2">Username</span>

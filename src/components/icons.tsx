@@ -1,5 +1,4 @@
 /* Inline stroke icons (feather-style) — no icon dependency needed. */
-import type { AppIcon } from '../api'
 
 interface IconProps {
   size?: number
@@ -38,10 +37,15 @@ export const RulerIcon = ({ size = 22, className }: IconProps) => (
     <path d="m7.5 10.5 2 2" /><path d="m10.5 7.5 2 2" /><path d="m13.5 4.5 2 2" /><path d="m4.5 13.5 2 2" />
   </svg>
 )
-export const AppIconFor = ({ icon, size, className }: IconProps & { icon: AppIcon }) => {
+export const AppIconFor = ({ icon, size, className }: IconProps & { icon: string }) => {
   const C = icon === 'people' ? PeopleIcon : icon === 'scope' ? ScopeIcon : RulerIcon
   return <C size={size} className={className} />
 }
+export const ArrowLeftIcon = ({ size = 15, className }: IconProps) => (
+  <svg {...base(size)} className={className} strokeWidth={2.5}>
+    <path d="M19 12H5" /><path d="m12 19-7-7 7-7" />
+  </svg>
+)
 export const ArrowRightIcon = ({ size = 15, className }: IconProps) => (
   <svg {...base(size)} className={className} strokeWidth={2.5}>
     <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
@@ -71,6 +75,20 @@ export const MoonIcon = ({ size = 16, className }: IconProps) => (
 export const LogoutIcon = ({ size = 15, className }: IconProps) => (
   <svg {...base(size)} className={className}>
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" />
+  </svg>
+)
+export const UploadIcon = ({ size = 15, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m17 8-5-5-5 5" /><path d="M12 3v12" />
+  </svg>
+)
+export const PlusIcon = ({ size = 15, className }: IconProps) => (
+  <svg {...base(size)} className={className}><path d="M12 5v14M5 12h14" /></svg>
+)
+export const TrashIcon = ({ size = 14, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
   </svg>
 )
 export const SearchIcon = ({ size = 15, className }: IconProps) => (
