@@ -26,6 +26,8 @@ export interface AppSummary {
   tag: string
   desc: string
   icon: string
+  /** folder holding this app's workbooks, relative to settings.excelRoot */
+  excelPath: string
   layerCount: number
   recordCount: number
 }
@@ -35,6 +37,71 @@ export interface AppCreate {
   tag?: string
   desc?: string
   icon?: string
+  excelPath?: string
+}
+
+export interface AppUpdate {
+  name?: string
+  tag?: string
+  desc?: string
+  icon?: string
+  excelPath?: string
+}
+
+export interface SourceFileInfo {
+  name: string
+  relativePath: string
+  sizeBytes: number
+  modifiedAt: string
+  layerId: string | null
+  changed: boolean
+  error: string | null
+}
+
+export interface LayerSource {
+  layerId: string
+  layerName: string
+  files: SourceFileInfo[]
+  /** more than one workbook maps here — ask before merging or picking one */
+  conflict: boolean
+  changed: boolean
+  lastSyncedAt: string | null
+  lastSyncedFile: string | null
+}
+
+export interface SourceStatus {
+  root: string
+  relativePath: string
+  resolvedPath: string
+  ok: boolean
+  errorCode: string | null
+  error: string | null
+  layers: LayerSource[]
+  unmatchedFiles: SourceFileInfo[]
+  changedCount: number
+}
+
+export interface SyncRequest {
+  mode: 'merge' | 'replace'
+  layers?: Array<{ layerId: string; files: string[] }>
+}
+
+export interface SyncLayerResult {
+  layerId: string
+  layerName: string
+  files: string[]
+  totalRows: number
+  inserted: number
+  updated: number
+  unchanged: number
+  duplicatesSkipped: number
+  error: string | null
+}
+
+export interface SyncResult {
+  syncedAt: string
+  mode: 'merge' | 'replace'
+  layers: SyncLayerResult[]
 }
 
 export interface LayerInfo {
@@ -52,6 +119,8 @@ export interface LayerCreate {
   name: string
   short?: string
   desc?: string
+  /** pyramid slot, bottom-first: 0 = base (most tests). Omitted = tip. */
+  order?: number
 }
 
 export interface UploadResult {
@@ -111,6 +180,8 @@ export interface LayerDashboardResponse {
 }
 
 export interface AppSettings {
+  /** parent folder holding one sub-folder per application */
+  excelRoot: string
   repoUrl: string
   branch: string
   cacheDir: string

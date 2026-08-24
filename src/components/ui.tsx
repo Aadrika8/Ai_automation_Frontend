@@ -1,23 +1,26 @@
 /* Small shared building blocks: Card, KpiTile, Breadcrumbs, Segmented,
    EmptyState, Skeleton, PageTitle. */
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { forwardRef, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { cx, fmt } from '../lib/format'
 
-export function Card({ className, children, onClick }: {
+export const Card = forwardRef<HTMLDivElement, {
   className?: string
   children: ReactNode
   onClick?: () => void
-}) {
+  style?: CSSProperties
+}>(function Card({ className, children, onClick, style }, ref) {
   return (
     <div
+      ref={ref}
       onClick={onClick}
+      style={style}
       className={cx('bg-surface border border-hairline rounded-xl shadow-card', className)}
     >
       {children}
     </div>
   )
-}
+})
 
 const reducedMotion = () =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches

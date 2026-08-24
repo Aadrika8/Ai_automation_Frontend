@@ -17,6 +17,7 @@ function AddAppModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [tag, setTag] = useState('')
   const [desc, setDesc] = useState('')
   const [icon, setIcon] = useState('scope')
+  const [excelPath, setExcelPath] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -25,7 +26,8 @@ function AddAppModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
     setBusy(true)
     setError(null)
     try {
-      await api.createApp({ name: name.trim(), tag: tag.trim(), desc: desc.trim(), icon })
+      await api.createApp({ name: name.trim(), tag: tag.trim(), desc: desc.trim(), icon,
+                            excelPath: excelPath.trim() })
       onCreated()
       onClose()
     } catch (err) {
@@ -38,6 +40,9 @@ function AddAppModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   return (
     <Modal title="Add application" onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
+        <p className="text-[11.5px] text-muted">
+          Starts with the default testing pyramid. You can add or remove its layers afterwards.
+        </p>
         <label className="block">
           <span className="text-xs font-medium text-ink2">Name</span>
           <input className={`${FIELD} mt-1`} value={name} onChange={e => setName(e.target.value)}
@@ -50,6 +55,12 @@ function AddAppModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
         <label className="block">
           <span className="text-xs font-medium text-ink2">Description (optional)</span>
           <input className={`${FIELD} mt-1`} value={desc} onChange={e => setDesc(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="text-xs font-medium text-ink2">Excel folder (optional)</span>
+          <input className={`${FIELD} mt-1`} value={excelPath}
+                 onChange={e => setExcelPath(e.target.value)}
+                 placeholder="folder under the Excel root — defaults to the app name" />
         </label>
         <div>
           <span className="text-xs font-medium text-ink2">Icon</span>

@@ -4,13 +4,14 @@ import { api, type ColumnDef, type LayerDashboardResponse, type LayerRecordsResp
 import { useAuth } from '../auth/AuthContext'
 import { useData } from '../lib/useData'
 import { fmt, timeAgo } from '../lib/format'
-import { layerColorVar } from '../lib/palette'
+import { layerAccentVar, layerColorVar } from '../lib/palette'
 import { Breadcrumbs, Card, EmptyState, KpiTile, PageTitle, Segmented, Skeleton } from '../components/ui'
 import { BarsChart } from '../components/charts/BarsChart'
 import { StatusDonut } from '../components/charts/StatusDonut'
 import { Modal } from '../components/Modal'
+import { SyncDialog } from '../components/SyncDialog'
 import { UploadDialog } from '../components/UploadDialog'
-import { SearchIcon, TrashIcon, UploadIcon } from '../components/icons'
+import { RefreshIcon, SearchIcon, TrashIcon, UploadIcon } from '../components/icons'
 
 const PAGE_SIZE = 250
 
@@ -109,7 +110,7 @@ function DashboardView({ dash, loading, order }: {
         <KpiTile label="Records" value={dash.totalRows} />
         <KpiTile label="Sections" value={dash.sectionCount} />
         <Card className="px-4.5 py-4">
-          <div className="text-xs text-ink2">Last upload</div>
+          <div className="text-xs text-ink2">Last loaded</div>
           <div className="text-[17px] font-semibold tracking-tight mt-1.5">
             {dash.lastUpload ? timeAgo(dash.lastUpload.uploadedAt) : '—'}
           </div>
@@ -187,6 +188,7 @@ export function LayerPage() {
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [syncing, setSyncing] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const [clearScope, setClearScope] = useState<'all' | 'last'>('last')
@@ -239,20 +241,26 @@ export function LayerPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <i className="w-2.5 h-10 rounded-full"
-             style={{ background: `var(${layerColorVar(layer?.order ?? 0)})` }} />
+             style={{ background: `var(${layerAccentVar(layer?.order ?? 0, layers?.length ?? 1)})` }} />
           <PageTitle lede={layer?.desc}>{layer?.name ?? layerId}</PageTitle>
         </div>
         <div className="flex items-center gap-2.5">
           {hasRole('qa') && (
-            <button onClick={() => setUploading(true)}
+            <button onClick={() => setSyncing(true)}
                     className="flex items-center gap-1.5 text-[13px] font-semibold bg-accent text-white rounded-lg px-3.5 py-2 hover:brightness-110 transition">
+              <RefreshIcon size={13} /> Refresh from Excel
+            </button>
+          )}
+          {hasRole('qa') && (
+            <button onClick={() => setUploading(true)}
+                    className="flex items-center gap-1.5 text-[13px] font-semibold rounded-lg px-3.5 py-2 border border-grid text-ink2 hover:border-accent hover:text-accent transition-colors">
               <UploadIcon size={13} /> Upload Excel
             </button>
           )}
           {hasRole('admin') && hasData && (
             <button onClick={() => setConfirmClear(true)}
                     className="flex items-center gap-1.5 text-[13px] font-semibold rounded-lg px-3.5 py-2 border border-grid text-crit-text hover:border-critical transition-colors">
-              <TrashIcon size={13} /> Delete uploaded data
+              <TrashIcon size={13} /> Delete ingested data
             </button>
           )}
         </div>
@@ -269,10 +277,10 @@ export function LayerPage() {
       {error && <EmptyState title="Could not load this layer" hint={error} />}
       {!error && records && !hasData ? (
         <EmptyState
-          title="No data uploaded yet"
+          title="No data loaded yet"
           hint={hasRole('qa')
-            ? 'Upload the Excel sheet from your test team to populate this layer.'
-            : 'A QA engineer or admin needs to upload this layer’s Excel sheet.'}
+            ? 'Refresh from Excel to read this layer’s workbook from the configured folder, or upload an .xlsx directly.'
+            : 'A QA engineer or admin needs to load this layer from the Excel folder or an upload.'}
         />
       ) : !error && (
         view === 'data'
@@ -281,26 +289,30 @@ export function LayerPage() {
           : <DashboardView dash={dash} loading={dashLoading} order={layer?.order ?? 0} />
       )}
 
+      {syncing && (
+        <SyncDialog appId={appId} layerId={layerId}
+                    onClose={() => setSyncing(false)} onSynced={reload} />
+      )}
       {uploading && (
         <UploadDialog appId={appId} layerId={layerId} layerName={layer?.name ?? layerId}
                       hasData={(layer?.recordCount ?? 0) > 0}
                       onClose={() => setUploading(false)} onUploaded={reload} />
       )}
       {confirmClear && (
-        <Modal title="Delete uploaded data?" onClose={() => setConfirmClear(false)}>
+        <Modal title="Delete ingested data?" onClose={() => setConfirmClear(false)}>
           <div className="space-y-1.5">
             {([
               {
                 value: 'last' as const,
-                label: 'Delete last upload only',
+                label: 'Delete last load only',
                 desc: records?.lastUpload
                   ? `Removes the rows added or last updated by ${records.lastUpload.fileName}. Earlier data stays.`
-                  : 'Removes the rows from the most recent upload. Earlier data stays.',
+                  : 'Removes the rows from the most recent load. Earlier data stays.',
               },
               {
                 value: 'all' as const,
                 label: 'Delete all data',
-                desc: `Removes all ${fmt(layer?.recordCount ?? 0)} ingested rows and the full upload history for this layer.`,
+                desc: `Removes all ${fmt(layer?.recordCount ?? 0)} ingested rows and the full load history for this layer.`,
               },
             ]).map(o => (
               <label key={o.value}
@@ -316,13 +328,13 @@ export function LayerPage() {
             ))}
           </div>
           <p className="text-[11.5px] text-muted mt-3">
-            The layer itself stays and new Excel sheets can be uploaded again afterwards.
+            The layer itself stays and can be refreshed from the Excel folder again afterwards.
             This cannot be undone.
           </p>
           <div className="flex gap-2 mt-4">
             <button onClick={clearData} disabled={clearBusy}
                     className="flex-1 bg-critical text-white font-semibold rounded-lg py-2.5 hover:brightness-110 disabled:opacity-50 transition">
-              {clearBusy ? 'Deleting…' : clearScope === 'last' ? 'Delete last upload' : 'Delete all data'}
+              {clearBusy ? 'Deleting…' : clearScope === 'last' ? 'Delete last load' : 'Delete all data'}
             </button>
             <button onClick={() => setConfirmClear(false)}
                     className="px-4 rounded-lg border border-grid text-ink2 hover:border-accent hover:text-accent transition-colors">
