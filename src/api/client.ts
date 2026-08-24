@@ -1,8 +1,9 @@
 /* The single seam between the UI and data — real HTTP client for the
    FastAPI backend. Each function maps 1:1 to a backend endpoint. */
 import type {
-  AppCreate, AppSettings, AppSummary, LayerCreate, LayerDashboardResponse,
-  LayerInfo, LayerRecordsResponse, ManagedUser, UploadResult, User, UserCreate,
+  AppCreate, AppSettings, AppSummary, AppUpdate, LayerCreate, LayerDashboardResponse,
+  LayerInfo, LayerRecordsResponse, ManagedUser, SourceStatus, SyncRequest, SyncResult,
+  UploadResult, User, UserCreate,
 } from './types'
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
@@ -66,6 +67,11 @@ export function createApp(body: AppCreate): Promise<AppSummary> {
   return request('/apps', { method: 'POST', body: JSON.stringify(body) })
 }
 
+// PATCH /api/apps/{appId} (admin)
+export function updateApp(appId: string, body: AppUpdate): Promise<AppSummary> {
+  return request(`/apps/${appId}`, { method: 'PATCH', body: JSON.stringify(body) })
+}
+
 // DELETE /api/apps/{appId} (admin)
 export function deleteApp(appId: string): Promise<void> {
   return request(`/apps/${appId}`, { method: 'DELETE' })
@@ -86,7 +92,20 @@ export function deleteLayer(appId: string, layerId: string): Promise<void> {
   return request(`/apps/${appId}/layers/${layerId}`, { method: 'DELETE' })
 }
 
+// GET /api/apps/{appId}/source
+// what the configured Excel folder currently holds, and what has changed
+export function getSource(appId: string): Promise<SourceStatus> {
+  return request(`/apps/${appId}/source`)
+}
+
+// POST /api/apps/{appId}/sync (qa+)
+// reads the configured workbooks; 'merge' upserts rows, 'replace' wipes first
+export function syncFromSource(appId: string, body: SyncRequest): Promise<SyncResult> {
+  return request(`/apps/${appId}/sync`, { method: 'POST', body: JSON.stringify(body) })
+}
+
 // POST /api/apps/{appId}/layers/{layerId}/uploads (qa+)
+// direct browser upload, kept alongside folder sync
 // mode 'merge' upserts into the existing rows; 'replace' wipes the layer first
 export function uploadLayerExcel(
   appId: string, layerId: string, file: File, mode: 'merge' | 'replace' = 'merge',

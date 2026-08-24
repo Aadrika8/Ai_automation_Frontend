@@ -27,7 +27,7 @@ export function SettingsPage() {
 
   return (
     <div className="anim-rise max-w-2xl">
-      <PageTitle lede="Test-repository and discovery configuration. Applied when the backend syncs the suites.">
+      <PageTitle lede="Excel catalog and test-repository configuration. Applied when the backend reads the workbooks.">
         Settings
       </PageTitle>
 
@@ -35,6 +35,16 @@ export function SettingsPage() {
       {settings && (
         <Card className="p-6 mt-6">
           <form onSubmit={submit} className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-medium text-ink2">Excel root folder</span>
+              <input className={`${FIELD} mt-1`} value={settings.excelRoot}
+                onChange={e => set({ excelRoot: e.target.value })}
+                placeholder="A:\\office excel files" />
+              <span className="text-[11.5px] text-muted mt-1 block">
+                Parent folder holding one sub-folder per application. Local paths and network
+                shares (\\\\server\\share\\…) both work, as long as the server account can read them.
+              </span>
+            </label>
             <label className="block">
               <span className="text-xs font-medium text-ink2">Git repository URL</span>
               <input className={`${FIELD} mt-1`} value={settings.repoUrl}

@@ -54,6 +54,15 @@ export const ArrowRightIcon = ({ size = 15, className }: IconProps) => (
 export const ChevronRightIcon = ({ size = 16, className }: IconProps) => (
   <svg {...base(size)} className={className}><path d="m9 18 6-6-6-6" /></svg>
 )
+export const ChevronDownIcon = ({ size = 16, className }: IconProps) => (
+  <svg {...base(size)} className={className}><path d="m6 9 6 6 6-6" /></svg>
+)
+export const AlertTriangleIcon = ({ size = 14, className }: IconProps) => (
+  <svg {...base(size)} className={className} strokeWidth={2.25}>
+    <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.14h17.2a1.5 1.5 0 0 0 1.3-2.14L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+    <path d="M12 9v4" /><path d="M12 16.5h.01" />
+  </svg>
+)
 export const CheckIcon = ({ size = 12, className }: IconProps) => (
   <svg {...base(size)} className={className} strokeWidth={3}><path d="M20 6 9 17l-5-5" /></svg>
 )
@@ -80,6 +89,16 @@ export const LogoutIcon = ({ size = 15, className }: IconProps) => (
 export const UploadIcon = ({ size = 15, className }: IconProps) => (
   <svg {...base(size)} className={className}>
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m17 8-5-5-5 5" /><path d="M12 3v12" />
+  </svg>
+)
+export const RefreshIcon = ({ size = 15, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" />
+  </svg>
+)
+export const FolderIcon = ({ size = 15, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
   </svg>
 )
 export const PlusIcon = ({ size = 15, className }: IconProps) => (
