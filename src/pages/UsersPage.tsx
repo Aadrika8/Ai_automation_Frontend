@@ -16,8 +16,8 @@ const ROLE_STYLE: Record<Role, string> = {
   manager: 'text-ink2 bg-muted/10',
 }
 const ROLE_DESC: Record<Role, string> = {
-  admin: 'Full access — data, uploads, apps & layers, settings, users',
-  qa: 'Browse layer data and dashboards, upload Excel sheets',
+  admin: 'Full access — data, releases, apps & layers, settings, users',
+  qa: 'Browse layer data and dashboards, load releases from Excel',
   manager: 'Read-only access to layer data and dashboards',
 }
 const ROLES: Role[] = ['manager', 'qa', 'admin']
@@ -170,7 +170,7 @@ export function UsersPage() {
           onConfirm={async () => { await api.deleteUser(deleting.username); reload() }}
         >
           <b>{deleting.name}</b> (<span className="font-mono text-xs">{deleting.username}</span>) will
-          no longer be able to sign in. This does not affect any data they uploaded.
+          no longer be able to sign in. This does not affect any data they loaded.
         </ConfirmDialog>
       )}
     </div>

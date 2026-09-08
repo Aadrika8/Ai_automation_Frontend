@@ -6,6 +6,8 @@ import { LoginPage } from './pages/LoginPage'
 import { ApplicationsPage } from './pages/ApplicationsPage'
 import { LayersPage } from './pages/LayersPage'
 import { LayerPage } from './pages/LayerPage'
+import { CoveragePage } from './pages/CoveragePage'
+import { BenchmarkPage } from './pages/BenchmarkPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { UsersPage } from './pages/UsersPage'
 
@@ -22,6 +24,8 @@ export default function App() {
               <Route path="/apps" element={<ApplicationsPage />} />
               <Route path="/apps/:appId" element={<LayersPage />} />
               <Route path="/apps/:appId/layers/:layerId" element={<LayerPage />} />
+              <Route path="/apps/:appId/coverage" element={<CoveragePage />} />
+              <Route path="/apps/:appId/benchmark" element={<BenchmarkPage />} />
 
               {/* Admin only */}
               <Route element={<RequireRole minRole="admin" />}>

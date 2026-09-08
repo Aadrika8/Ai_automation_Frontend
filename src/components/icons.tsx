@@ -115,3 +115,24 @@ export const SearchIcon = ({ size = 15, className }: IconProps) => (
     <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
   </svg>
 )
+
+export const LinkIcon = ({ size = 15, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5" />
+    <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5" />
+  </svg>
+)
+
+export const DownloadIcon = ({ size = 15, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 3v12m0 0 4-4m-4 4-4-4" />
+    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+  </svg>
+)
+
+export const SlidersIcon = ({ size = 15, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h10M18 18h2" />
+    <circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="16" cy="18" r="2" />
+  </svg>
+)

@@ -9,12 +9,18 @@ import { NAV_ITEMS } from './nav'
 
 const ROLE_LABEL: Record<string, string> = { admin: 'Admin', qa: 'QA', manager: 'Manager' }
 
-/** Hierarchical "up" target for the global back button; null on the root page. */
-function parentPath(pathname: string): string | null {
+/** Hierarchical "up" target for the global back button; null on the root page.
+    The release being viewed rides along in the query string, so going up from a
+    layer lands on the same release rather than resetting to the current one. */
+function parentPath(pathname: string, search: string): string | null {
   if (pathname === '/apps') return null
   if (pathname.startsWith('/apps/')) {
     const segments = pathname.split('/').filter(Boolean) // ['apps', appId, 'layers', layerId]
-    return segments.length >= 4 ? `/apps/${segments[1]}` : '/apps'
+    if (segments.length < 4) return '/apps'
+    const release = new URLSearchParams(search).get('release')
+    return release
+      ? `/apps/${segments[1]}?release=${encodeURIComponent(release)}`
+      : `/apps/${segments[1]}`
   }
   return '/apps' // settings, users, anything else
 }
@@ -24,7 +30,7 @@ export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [confirmLogout, setConfirmLogout] = useState(false)
-  const backTo = parentPath(location.pathname)
+  const backTo = parentPath(location.pathname, location.search)
 
   return (
     <div className="min-h-screen flex flex-col">

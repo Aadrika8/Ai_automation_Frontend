@@ -1,3 +1,8 @@
+/* UPLOAD DISABLED
+   The app reads each release's folder on disk; nothing is uploaded from a
+   browser. This dialog is kept intact so the flow can be restored by
+   uncommenting it together with api.uploadLayerExcel and its call sites.
+
 import { useState } from 'react'
 import { api, type UploadResult } from '../api'
 import { cx, fmt } from '../lib/format'
@@ -16,16 +21,21 @@ const MODES: Array<{ value: UploadMode; label: string; desc: string }> = [
   {
     value: 'replace',
     label: 'Replace all data',
-    desc: 'The layer is wiped first — the file becomes the entire dataset.',
+    desc: 'This release\u2019s rows for the layer are wiped first — the file becomes its entire dataset.',
   },
 ]
 
-/** Excel upload flow for one layer: pick mode + file → ingest → result summary. */
-export function UploadDialog({ appId, layerId, layerName, hasData, onClose, onUploaded }: {
+/** Excel upload flow for one layer of one release: pick mode + file → ingest
+    → result summary. The file only ever lands in the given release. *\/
+export function UploadDialog({
+  appId, releaseId, releaseName, layerId, layerName, hasData, onClose, onUploaded,
+}: {
   appId: string
+  releaseId: string
+  releaseName: string
   layerId: string
   layerName: string
-  /** whether the layer already holds records — the merge/replace choice only matters then */
+  /** whether the layer already holds records — the merge/replace choice only matters then *\/
   hasData: boolean
   onClose: () => void
   onUploaded: () => void
@@ -39,7 +49,8 @@ export function UploadDialog({ appId, layerId, layerName, hasData, onClose, onUp
     setBusy(true)
     setError(null)
     try {
-      setResult(await api.uploadLayerExcel(appId, layerId, file, hasData ? mode : 'merge'))
+      setResult(await api.uploadLayerExcel(appId, releaseId, layerId, file,
+                                          hasData ? mode : 'merge'))
       onUploaded()
     } catch (err) {
       setError((err as Error).message)
@@ -49,7 +60,7 @@ export function UploadDialog({ appId, layerId, layerName, hasData, onClose, onUp
   }
 
   return (
-    <Modal title={`Upload Excel — ${layerName}`} onClose={onClose}>
+    <Modal title={`Upload Excel — ${layerName} · ${releaseName}`} onClose={onClose}>
       {result ? (
         <div className="anim-rise">
           <div className="flex items-center gap-2 text-good-text font-semibold text-[13.5px]">
@@ -109,10 +120,14 @@ export function UploadDialog({ appId, layerId, layerName, hasData, onClose, onUp
             <div className="text-[12.5px] text-crit-text bg-critical/10 rounded-lg px-3 py-2 mt-3">{error}</div>
           )}
           <p className="text-[11.5px] text-muted mt-3">
-            Duplicate rows inside the file are skipped automatically.
+            Loaded into <b className="text-ink2">{releaseName}</b> only. Duplicate rows inside
+            the file are skipped automatically.
           </p>
         </>
       )}
     </Modal>
   )
 }
+
+*/
+export {}
