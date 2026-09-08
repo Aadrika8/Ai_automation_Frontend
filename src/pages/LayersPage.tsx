@@ -1,25 +1,33 @@
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { api, type LayerInfo, type SourceStatus } from '../api'
+import {
+  api, type AutomationCoverageResponse, type CoverageResponse, type LayerInfo,
+  type ReleaseInfo, type SourceStatus,
+} from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { useData } from '../lib/useData'
-import { cx, fmt, timeAgo } from '../lib/format'
+import { useReleases, withRelease } from '../lib/useRelease'
+import { monthLabel } from '../lib/period'
+import { cx, fmt } from '../lib/format'
 import { layerAccentVar } from '../lib/palette'
 import { Breadcrumbs, Card, EmptyState, PageTitle, Skeleton } from '../components/ui'
 import { Modal } from '../components/Modal'
 import { ConfirmDialog } from '../components/ConfirmDialog'
-import { SyncDialog } from '../components/SyncDialog'
-import { UploadDialog } from '../components/UploadDialog'
+import { ReleaseSwitcher } from '../components/ReleaseSwitcher'
+import { LoadDialog } from '../components/LoadDialog'
+/* UPLOAD DISABLED: import { UploadDialog } from '../components/UploadDialog' */
 import {
-  AlertTriangleIcon, ArrowRightIcon, CheckIcon, ChevronDownIcon, FolderIcon, PlusIcon,
-  RefreshIcon, TrashIcon, UploadIcon,
+  AlertTriangleIcon, ArrowRightIcon, CheckIcon, ChevronDownIcon, FolderIcon, LinkIcon,
+  PlusIcon, RefreshIcon, RulerIcon, TrashIcon,
 } from '../components/icons'
 
 /* ---------- Testing Pyramid rule ----------
+   Checked within one release: a release owns its own layers, so its pyramid
+   is judged on its own data and never against another release's.
    Every layer must have strictly fewer test cases than the layer directly
    below it (Unit > Integration > System > UI/E2E). Layers are compared by
    their `order` (bottom-first). A layer with 0 records means no data has
-   been uploaded yet, so any comparison touching it is skipped rather than
+   been loaded yet, so any comparison touching it is skipped rather than
    flagged — the rule only applies once both sides have real data. */
 type PyramidRelation = {
   lower: LayerInfo
@@ -114,8 +122,11 @@ function PyramidPositionPicker({ layers, value, onChange, newName }: {
   )
 }
 
-function AddLayerModal({ appId, layers, onClose, onCreated }: {
+function AddLayerModal({ appId, releaseId, releaseName, layers, onClose, onCreated }: {
   appId: string
+  /** the layer is added to this release only */
+  releaseId: string
+  releaseName: string
   /** existing layers, sorted bottom-first */
   layers: LayerInfo[]
   onClose: () => void
@@ -135,7 +146,7 @@ function AddLayerModal({ appId, layers, onClose, onCreated }: {
     setBusy(true)
     setError(null)
     try {
-      await api.createLayer(appId, {
+      await api.createLayer(appId, releaseId, {
         name: name.trim(), short: short.trim(), desc: desc.trim(), order: position,
       })
       onCreated()
@@ -154,7 +165,8 @@ function AddLayerModal({ appId, layers, onClose, onCreated }: {
     <Modal title="Add testing layer" onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <p className="text-[11.5px] text-muted">
-          Added to this application only — other applications keep their own layers.
+          Added to <b className="text-ink2">{releaseName}</b> only — every other release,
+          and every other application, keeps its own layers.
         </p>
         <label className="block">
           <span className="text-xs font-medium text-ink2">Name</span>
@@ -199,17 +211,137 @@ function AddLayerModal({ appId, layers, onClose, onCreated }: {
   )
 }
 
-/* Where this application's data comes from. Shows the resolved folder and
-   what was discovered in it; admins can correct the relative path inline. */
-function ExcelSourceCard({ appId, source, canEdit, excelPath, onSaved }: {
+/* Where this release's data comes from.
+
+   There is one path to show. It is <application name>/<release name> under the
+   Excel root unless this release overrides it, so in the normal case nobody
+   configures anything here at all — the card just says which folder to create. */
+/* Feature <-> System coverage, summarised.
+
+   The two percentages belong on this page because they are a property of the
+   release rather than of any one testing layer: neither the Feature card nor
+   the System card can own a number that is about the gap between them. */
+function CoverageCard({ appId, releaseId, layers, reloadKey }: {
   appId: string
-  source: SourceStatus | null
+  releaseId: string
+  layers: LayerInfo[]
+  reloadKey: number
+}) {
+  const navigate = useNavigate()
+  const pair = ['feature', 'system'].every(id => layers.some(l => l.id === id))
+
+  const { data } = useData<CoverageResponse | null>(
+    () => (pair && releaseId ? api.getCoverage(appId, releaseId) : Promise.resolve(null)),
+    [appId, releaseId, pair, reloadKey],
+  )
+  if (!pair) return null
+
+  const summary = data?.summary
+  const blocked = data?.errorCode ? data.error : null
+  const gaps = summary ? summary.missingInSystem + summary.missingInFeature : 0
+  const clean = Boolean(summary) && gaps === 0 && !blocked
+
+  const figure = (label: string, value: number) => (
+    <div>
+      <div className="text-[11px] text-muted">{label}</div>
+      <div className="text-[15px] font-semibold tabular-nums">{value.toFixed(1)}%</div>
+    </div>
+  )
+
+  return (
+    <Card
+      className="mt-6 p-4.5 flex flex-wrap items-center gap-x-6 gap-y-3 cursor-pointer
+                 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:border-accent"
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(withRelease(`/apps/${appId}/coverage`, releaseId))}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate(withRelease(`/apps/${appId}/coverage`, releaseId)) }}
+      ariaLabel="Feature to System coverage"
+    >
+      <div className="flex items-center gap-2.5 flex-1 min-w-[210px]">
+        <LinkIcon className="shrink-0 text-accent" />
+        <div>
+          <div className="text-[12.5px] font-semibold">Feature ↔ System coverage</div>
+          <div className="text-[11px] text-muted">
+            {blocked ?? (clean
+              ? 'Every feature is verified, and every system item is planned'
+              : summary
+                ? `${fmt(gaps)} gap${gaps === 1 ? '' : 's'} across both directions`
+                : 'Checking…')}
+          </div>
+        </div>
+      </div>
+      {summary && !blocked && (
+        <div className="flex items-center gap-6">
+          {figure('Feature → System', summary.forwardCoveragePct)}
+          {figure('System → Feature', summary.backwardCoveragePct)}
+        </div>
+      )}
+      <ArrowRightIcon className="text-muted" />
+    </Card>
+  )
+}
+
+/* Automation coverage, summarised.
+
+   A release-level property like the coverage card above it: no single testing
+   layer owns the count-weighted figure, and the industry reference it sits
+   beside belongs to none of them either. */
+function BenchmarkCard({ appId, releaseId, reloadKey }: {
+  appId: string
+  releaseId: string
+  reloadKey: number
+}) {
+  const navigate = useNavigate()
+  const { data } = useData<AutomationCoverageResponse | null>(
+    () => (releaseId ? api.getAutomationCoverage(appId, releaseId) : Promise.resolve(null)),
+    [appId, releaseId, reloadKey],
+  )
+  const go = () => navigate(withRelease(`/apps/${appId}/benchmark`, releaseId))
+  const evident = data?.evident
+  const reference = data?.reference
+
+  return (
+    <Card
+      className="mt-4 p-4.5 flex flex-wrap items-center gap-x-6 gap-y-3 cursor-pointer
+                 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:border-accent"
+      role="button"
+      tabIndex={0}
+      onClick={go}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') go() }}
+      ariaLabel="Automation coverage against the industry reference"
+    >
+      <div className="flex items-center gap-2.5 flex-1 min-w-[210px]">
+        <RulerIcon className="shrink-0 text-accent" />
+        <div>
+          <div className="text-[12.5px] font-semibold">Automation coverage</div>
+          <div className="text-[11px] text-muted">
+            {!data ? 'Checking…'
+              : evident?.measured
+                ? `against a surveyed range of ${reference?.low}–${reference?.high}%`
+                : 'not measured — no automated-test count in the workbooks'}
+          </div>
+        </div>
+      </div>
+      {evident?.measured && (
+        <div>
+          <div className="text-[11px] text-muted">Evident</div>
+          <div className="text-[15px] font-semibold tabular-nums">{evident.coveragePct?.toFixed(1)}%</div>
+        </div>
+      )}
+      <ArrowRightIcon className="text-muted" />
+    </Card>
+  )
+}
+
+function PathRow({ value, placeholder, canEdit, onSave }: {
+  value: string
+  placeholder: string
   canEdit: boolean
-  excelPath: string
-  onSaved: () => void
+  onSave: (next: string) => Promise<void>
 }) {
   const [editing, setEditing] = useState(false)
-  const [value, setValue] = useState(excelPath)
+  const [draft, setDraft] = useState(value)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -217,9 +349,8 @@ function ExcelSourceCard({ appId, source, canEdit, excelPath, onSaved }: {
     setBusy(true)
     setError(null)
     try {
-      await api.updateApp(appId, { excelPath: value.trim() })
+      await onSave(draft.trim())
       setEditing(false)
-      onSaved()
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -227,38 +358,74 @@ function ExcelSourceCard({ appId, source, canEdit, excelPath, onSaved }: {
     }
   }
 
-  if (!source) return null
+  return (
+    <div className="flex items-baseline gap-2 flex-wrap text-[11.5px]">
+      {editing ? (
+        <span className="flex flex-wrap items-center gap-2 flex-1">
+          <input autoFocus value={draft} onChange={e => setDraft(e.target.value)}
+                 placeholder={placeholder} aria-label="Release folder"
+                 className="flex-1 min-w-[180px] bg-surface border border-grid rounded-lg px-2.5 py-1.5 text-[12.5px] outline-none focus:border-accent transition-colors" />
+          <button onClick={save} disabled={busy}
+                  className="text-[12.5px] font-semibold bg-accent text-white rounded-lg px-3 py-1.5 disabled:opacity-50">
+            {busy ? 'Saving…' : 'Save'}
+          </button>
+          <button onClick={() => { setEditing(false); setDraft(value); setError(null) }}
+                  className="text-[12.5px] text-muted px-2 py-1.5">Cancel</button>
+        </span>
+      ) : (
+        canEdit && (
+          <button onClick={() => { setDraft(value); setEditing(true) }}
+                  className="text-[11.5px] font-semibold text-muted hover:text-accent transition-colors">
+            Change folder
+          </button>
+        )
+      )}
+      {error && <span className="basis-full text-crit-text">{error}</span>}
+    </div>
+  )
+}
+
+function ExcelSourceCard({ appId, release, source, canEdit, onSaved }: {
+  appId: string
+  release: ReleaseInfo | null
+  source: SourceStatus | null
+  canEdit: boolean
+  onSaved: () => void
+}) {
+  if (!source || !release) return null
   const matched = source.layers.filter(l => l.files.length > 0)
 
   return (
     <Card className="mt-6 p-4">
       <div className="flex items-start gap-2.5">
         <FolderIcon size={15} className={cx('mt-0.5 shrink-0', source.ok ? 'text-muted' : 'text-crit-text')} />
-        <div className="min-w-0 flex-1">
-          <div className="text-[12.5px] font-semibold">Excel source</div>
-          {!editing && (
-            <p className="text-[11.5px] text-muted mt-0.5 break-all">
-              {source.ok
-                ? source.resolvedPath
-                : source.error ?? 'The Excel folder is not configured.'}
-            </p>
-          )}
-          {editing && (
-            <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              <input autoFocus value={value} onChange={e => setValue(e.target.value)}
-                     placeholder="folder name under the Excel root, e.g. cellsens"
-                     className="flex-1 min-w-[200px] bg-surface border border-grid rounded-lg px-2.5 py-1.5 text-[12.5px] outline-none focus:border-accent transition-colors" />
-              <button onClick={save} disabled={busy}
-                      className="text-[12.5px] font-semibold bg-accent text-white rounded-lg px-3 py-1.5 disabled:opacity-50">
-                {busy ? 'Saving…' : 'Save'}
-              </button>
-              <button onClick={() => { setEditing(false); setValue(excelPath) }}
-                      className="text-[12.5px] text-muted px-2 py-1.5">Cancel</button>
-            </div>
-          )}
-          {error && <p className="text-[11.5px] text-crit-text mt-1">{error}</p>}
-          {source.ok && !editing && (
-            <p className="text-[11.5px] text-muted mt-1">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="text-[12.5px] font-semibold">
+            Excel source — {release.name}
+          </div>
+          <p className={cx('text-[11.5px] break-all', source.ok ? 'text-muted' : 'text-crit-text')}>
+            {source.ok
+              ? source.resolvedPath
+              : source.error ?? 'No Excel root folder is configured.'}
+          </p>
+          <p className="text-[11.5px] text-muted">
+            {source.customFolder
+              ? <>Reading <code className="text-ink2">{source.folder}</code> under the Excel root.</>
+              : <>Named after the application and the release. Put this release's
+                 workbooks in <code className="text-ink2">{source.folder}</code>, one per
+                 layer — <code>regression.xlsx</code>, <code>acceptance.xlsx</code>.</>}
+          </p>
+          <PathRow
+            value={release.excelPath}
+            placeholder={`leave blank for ${source.folder}`}
+            canEdit={canEdit}
+            onSave={async next => {
+              await api.updateRelease(appId, release.id, { excelPath: next })
+              onSaved()
+            }}
+          />
+          {source.ok && (
+            <p className="text-[11.5px] text-muted">
               {matched.length} of {source.layers.length} layers matched to a workbook
               {source.changedCount > 0 && ` · ${source.changedCount} changed since the last refresh`}
               {source.unmatchedFiles.length > 0 &&
@@ -266,12 +433,6 @@ function ExcelSourceCard({ appId, source, canEdit, excelPath, onSaved }: {
             </p>
           )}
         </div>
-        {canEdit && !editing && (
-          <button onClick={() => { setValue(excelPath); setEditing(true) }}
-                  className="shrink-0 text-[12px] font-semibold text-muted hover:text-accent transition-colors">
-            Change
-          </button>
-        )}
       </div>
     </Card>
   )
@@ -283,10 +444,16 @@ export function LayersPage() {
   const { hasRole } = useAuth()
   const [reloadKey, setReloadKey] = useState(0)
   const { data: apps } = useData(() => api.getApplications(), [reloadKey])
-  const { data: layers, loading, error } = useData(() => api.getLayers(appId), [appId, reloadKey])
+  // which release is being viewed — everything below is scoped to it
+  const { releases, active, activeId, select, loading: releasesLoading } =
+    useReleases(appId, reloadKey)
+  const { data: layers, loading, error } = useData(
+    () => (activeId ? api.getLayers(appId, activeId) : Promise.resolve([] as LayerInfo[])),
+    [appId, activeId, reloadKey],
+  )
   const [syncFor, setSyncFor] = useState<LayerInfo | null>(null)
   const [syncAll, setSyncAll] = useState(false)
-  const [uploadFor, setUploadFor] = useState<LayerInfo | null>(null)
+  /* UPLOAD DISABLED: const [uploadFor, setUploadFor] = useState<LayerInfo | null>(null) */
   const [adding, setAdding] = useState(false)
   const [deleting, setDeleting] = useState<LayerInfo | null>(null)
   const [summaryOpen, setSummaryOpen] = useState(false)
@@ -295,7 +462,10 @@ export function LayersPage() {
 
   const app = apps?.find(a => a.id === appId)
   const appName = app?.name ?? appId
-  const { data: source } = useData(() => api.getSource(appId), [appId, reloadKey])
+  const { data: source } = useData<SourceStatus | null>(
+    () => (activeId ? api.getSource(appId, activeId) : Promise.resolve(null)),
+    [appId, activeId, reloadKey],
+  )
   const reload = () => setReloadKey(k => k + 1)
 
   // bottom-first (Unit → Integration → System → UI/E2E), same order the
@@ -316,17 +486,19 @@ export function LayersPage() {
     <div className="anim-rise">
       <Breadcrumbs items={[{ label: 'Applications', to: '/apps' }, { label: appName }]} />
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <PageTitle lede="Pick a testing layer to browse its ingested data and dashboard, or refresh it from the configured Excel folder.">
+        <PageTitle lede="Pick a testing layer to browse this release's ingested data and dashboard, or refresh it from the configured Excel folder.">
           {appName} — Testing Layers
         </PageTitle>
-        <div className="flex items-center gap-2.5">
-          {hasRole('qa') && (
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <ReleaseSwitcher appId={appId} releases={releases} active={active}
+                           onSelect={select} onChanged={reload} />
+          {hasRole('qa') && activeId && (
             <button onClick={() => setSyncAll(true)}
                     className="flex items-center gap-1.5 text-[13px] font-semibold bg-accent text-white rounded-lg px-3.5 py-2 hover:brightness-110 transition">
-              <RefreshIcon size={13} /> Refresh from Excel
+              <RefreshIcon size={13} /> Load from Excel
             </button>
           )}
-          {hasRole('admin') && (
+          {hasRole('admin') && activeId && (
             <button onClick={() => setAdding(true)}
                     className="flex items-center gap-1.5 text-[13px] font-semibold rounded-lg px-3.5 py-2 border border-grid text-ink2 hover:border-accent hover:text-accent transition-colors">
               <PlusIcon size={13} /> Add layer
@@ -336,9 +508,26 @@ export function LayersPage() {
       </div>
 
       {error && <EmptyState title="Could not load layers" hint={error} />}
+      {!releasesLoading && releases?.length === 0 && (
+        <EmptyState
+          title="No releases yet"
+          hint={hasRole('admin')
+            ? 'Create a release from the Release menu above — each one keeps its own testing layers and data.'
+            : 'An admin needs to create a release before data can be loaded.'}
+        />
+      )}
 
-      <ExcelSourceCard appId={appId} source={source ?? null} canEdit={hasRole('admin')}
-                       excelPath={app?.excelPath ?? ''} onSaved={reload} />
+      <ExcelSourceCard appId={appId} release={active} source={source ?? null}
+                       canEdit={hasRole('admin')} onSaved={reload} />
+
+      {!loading && activeId && (
+        <CoverageCard appId={appId} releaseId={activeId}
+                      layers={sortedLayers} reloadKey={reloadKey} />
+      )}
+
+      {!loading && activeId && (
+        <BenchmarkCard appId={appId} releaseId={activeId} reloadKey={reloadKey} />
+      )}
 
       {!loading && sortedLayers.length > 1 && (
         <Card className="mt-6 overflow-hidden">
@@ -424,7 +613,7 @@ export function LayersPage() {
                 flashId === layer.id && 'pyramid-flash',
               )}
               style={violated ? { borderColor: 'var(--critical)', boxShadow: '0 0 0 1px var(--critical) inset' } : undefined}
-              onClick={() => navigate(`/apps/${appId}/layers/${layer.id}`)}
+              onClick={() => navigate(withRelease(`/apps/${appId}/layers/${layer.id}`, activeId))}
             >
               <div className="flex items-center gap-2.5">
                 <i className="w-2.5 h-8 rounded-full shrink-0"
@@ -458,9 +647,22 @@ export function LayersPage() {
                   records
                 </div>
                 <div className="text-right">
-                  {layer.lastUploadAt
-                    ? <><b className="block font-semibold text-ink">{timeAgo(layer.lastUploadAt)}</b>{layer.lastUploadFile}</>
-                    : <span className="italic">no data uploaded yet</span>}
+                  {layer.latestSnapshotAt
+                    ? (
+                      <>
+                        <b className="block font-semibold text-ink">
+                          {monthLabel(layer.latestPeriod)}
+                        </b>
+                        {layer.fileCount === 1
+                          ? '1 file'
+                          : `${fmt(layer.fileCount)} files`}
+                        {' · '}
+                        {layer.snapshotCount === 1
+                          ? '1 snapshot'
+                          : `${fmt(layer.snapshotCount)} snapshots`}
+                      </>
+                    )
+                    : <span className="italic">no data loaded yet</span>}
                 </div>
               </div>
 
@@ -492,8 +694,9 @@ export function LayersPage() {
                     className="flex-1 flex items-center justify-center gap-1.5 text-[12.5px] font-semibold rounded-lg py-2
                                border border-grid text-ink2 hover:border-accent hover:text-accent transition-colors"
                   >
-                    <RefreshIcon size={13} /> Refresh from Excel
+                    <RefreshIcon size={13} /> Load from Excel
                   </button>
+                  {/* UPLOAD DISABLED
                   <button
                     onClick={e => { e.stopPropagation(); setUploadFor(layer) }}
                     className="flex-1 flex items-center justify-center gap-1.5 text-[12.5px] font-semibold rounded-lg py-2
@@ -501,6 +704,7 @@ export function LayersPage() {
                   >
                     <UploadIcon size={13} /> Upload Excel
                   </button>
+                  */}
                 </div>
               )}
             </Card>
@@ -509,15 +713,20 @@ export function LayersPage() {
       </div>
 
       {syncFor && (
-        <SyncDialog appId={appId} layerId={syncFor.id}
-                    onClose={() => setSyncFor(null)} onSynced={reload} />
+        <LoadDialog appId={appId} releaseId={activeId} releaseName={active?.name ?? ''}
+                    layerId={syncFor.id}
+                    onClose={() => setSyncFor(null)} onLoaded={reload} />
       )}
       {syncAll && (
-        <SyncDialog appId={appId} onClose={() => setSyncAll(false)} onSynced={reload} />
+        <LoadDialog appId={appId} releaseId={activeId} releaseName={active?.name ?? ''}
+                    onClose={() => setSyncAll(false)} onLoaded={reload} />
       )}
+      {/* UPLOAD DISABLED
       {uploadFor && (
         <UploadDialog
           appId={appId}
+          releaseId={activeId}
+          releaseName={active?.name ?? ''}
           layerId={uploadFor.id}
           layerName={uploadFor.name}
           hasData={uploadFor.recordCount > 0}
@@ -525,8 +734,10 @@ export function LayersPage() {
           onUploaded={reload}
         />
       )}
+      */}
       {adding && (
-        <AddLayerModal appId={appId} layers={sortedLayers}
+        <AddLayerModal appId={appId} releaseId={activeId} releaseName={active?.name ?? ''}
+                       layers={sortedLayers}
                        onClose={() => setAdding(false)} onCreated={reload} />
       )}
       {deleting && (
@@ -534,11 +745,12 @@ export function LayersPage() {
           title="Delete layer?"
           confirmLabel="Delete layer"
           onClose={() => setDeleting(null)}
-          onConfirm={async () => { await api.deleteLayer(appId, deleting.id); reload() }}
+          onConfirm={async () => { await api.deleteLayer(appId, activeId, deleting.id); reload() }}
         >
-          <b>{deleting.name}</b> will be permanently removed, including its{' '}
-          <b>{fmt(deleting.recordCount)}</b> ingested records and upload history.
-          This cannot be undone.
+          <b>{deleting.name}</b> will be permanently removed from{' '}
+          <b>{active?.name ?? 'this release'}</b>, including its{' '}
+          <b>{fmt(deleting.recordCount)}</b> current records and every snapshot behind them.
+          Other releases keep their own copy of the layer. This cannot be undone.
         </ConfirmDialog>
       )}
     </div>

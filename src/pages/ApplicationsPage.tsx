@@ -17,7 +17,7 @@ function AddAppModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [tag, setTag] = useState('')
   const [desc, setDesc] = useState('')
   const [icon, setIcon] = useState('scope')
-  const [excelPath, setExcelPath] = useState('')
+  const [releaseName, setReleaseName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -27,7 +27,7 @@ function AddAppModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
     setError(null)
     try {
       await api.createApp({ name: name.trim(), tag: tag.trim(), desc: desc.trim(), icon,
-                            excelPath: excelPath.trim() })
+                            releaseName: releaseName.trim() || undefined })
       onCreated()
       onClose()
     } catch (err) {
@@ -41,7 +41,8 @@ function AddAppModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
     <Modal title="Add application" onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
         <p className="text-[11.5px] text-muted">
-          Starts with the default testing pyramid. You can add or remove its layers afterwards.
+          Starts with one release carrying the default testing pyramid. Add further releases
+          as the product versions roll — each keeps its own layers and data.
         </p>
         <label className="block">
           <span className="text-xs font-medium text-ink2">Name</span>
@@ -57,10 +58,14 @@ function AddAppModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
           <input className={`${FIELD} mt-1`} value={desc} onChange={e => setDesc(e.target.value)} />
         </label>
         <label className="block">
-          <span className="text-xs font-medium text-ink2">Excel folder (optional)</span>
-          <input className={`${FIELD} mt-1`} value={excelPath}
-                 onChange={e => setExcelPath(e.target.value)}
-                 placeholder="folder under the Excel root — defaults to the app name" />
+          <span className="text-xs font-medium text-ink2">First release (optional)</span>
+          <input className={`${FIELD} mt-1`} value={releaseName}
+                 onChange={e => setReleaseName(e.target.value)}
+                 placeholder="e.g. v4.4 — defaults to “Initial release”" />
+          <span className="text-[11.5px] text-muted mt-1 block">
+            Data is read from <code>&lt;Excel root&gt;/{name.trim() || 'application'}/
+            {releaseName.trim() || 'release'}</code>. You can rename or add more later.
+          </span>
         </label>
         <div>
           <span className="text-xs font-medium text-ink2">Icon</span>
@@ -135,11 +140,11 @@ export function ApplicationsPage() {
             </div>
             <p className="text-[13px] text-ink2 flex-1">{app.desc}</p>
             <div className="flex gap-5 border-t border-grid pt-3.5 text-xs text-muted">
-              <div><b className="block text-base font-semibold text-ink">{fmt(app.layerCount)}</b>testing layers</div>
+              <div><b className="block text-base font-semibold text-ink">{fmt(app.releaseCount)}</b>releases</div>
               <div><b className="block text-base font-semibold text-ink">{fmt(app.recordCount)}</b>ingested records</div>
             </div>
             <span className="flex items-center gap-1.5 text-accent font-semibold text-[13px]">
-              View Testing Layers
+              {app.currentRelease ? `Open ${app.currentRelease}` : 'View Testing Layers'}
               <ArrowRightIcon className="transition-transform group-hover:translate-x-0.5" />
             </span>
           </Card>
@@ -153,9 +158,10 @@ export function ApplicationsPage() {
           onClose={() => setDeleting(null)}
           onConfirm={async () => { await api.deleteApp(deleting.id); setReloadKey(k => k + 1) }}
         >
-          <b>{deleting.name}</b> will be permanently removed, including its{' '}
-          <b>{fmt(deleting.layerCount)}</b> layers and <b>{fmt(deleting.recordCount)}</b> ingested
-          records. This cannot be undone.
+          <b>{deleting.name}</b> will be permanently removed, including all{' '}
+          <b>{fmt(deleting.releaseCount)}</b> of its releases and their{' '}
+          <b>{fmt(deleting.recordCount)}</b> ingested records — history included.
+          This cannot be undone.
         </ConfirmDialog>
       )}
     </div>

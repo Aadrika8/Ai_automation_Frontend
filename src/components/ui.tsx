@@ -1,6 +1,9 @@
 /* Small shared building blocks: Card, KpiTile, Breadcrumbs, Segmented,
    EmptyState, Skeleton, PageTitle. */
-import { forwardRef, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  forwardRef, useEffect, useRef, useState,
+  type CSSProperties, type KeyboardEvent, type ReactNode,
+} from 'react'
 import { Link } from 'react-router-dom'
 import { cx, fmt } from '../lib/format'
 
@@ -9,12 +12,25 @@ export const Card = forwardRef<HTMLDivElement, {
   children: ReactNode
   onClick?: () => void
   style?: CSSProperties
-}>(function Card({ className, children, onClick, style }, ref) {
+  /* A card that acts as a control needs to say so and be reachable by
+     keyboard; a plain one passes none of this and stays a plain div. */
+  role?: string
+  tabIndex?: number
+  ariaLabel?: string
+  ariaCurrent?: boolean
+  onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void
+}>(function Card({ className, children, onClick, style, role, tabIndex,
+                   ariaLabel, ariaCurrent, onKeyDown }, ref) {
   return (
     <div
       ref={ref}
       onClick={onClick}
+      onKeyDown={onKeyDown}
       style={style}
+      role={role}
+      tabIndex={tabIndex}
+      aria-label={ariaLabel}
+      aria-current={ariaCurrent ? 'true' : undefined}
       className={cx('bg-surface border border-hairline rounded-xl shadow-card', className)}
     >
       {children}
