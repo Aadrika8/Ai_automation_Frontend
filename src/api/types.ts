@@ -143,6 +143,12 @@ export interface SnapshotFileResult {
   totalRows: number
   duplicatesSkipped: number
   diff: SnapshotDiff | null
+  /** reported whether or not a snapshot was written: a workbook that has not
+      changed since its last load still has whatever is wrong with it */
+  warnings: QualityWarning[]
+  /** the workbook this one used to be called, when a load recognised a rename
+      and carried its history across rather than starting a second dataset */
+  renamedFrom: string
   /** why nothing was written, when nothing was */
   reason: string | null
   error: string | null
@@ -153,6 +159,8 @@ export interface SnapshotRunResult {
   releaseId: string
   period: SnapshotPeriod
   files: SnapshotFileResult[]
+  /** findings about the release as a whole rather than one workbook */
+  warnings: QualityWarning[]
 }
 
 /** The month a snapshot describes — chosen when it is loaded. */
@@ -201,6 +209,15 @@ export interface LayerFileInfo {
   combined: boolean
 }
 
+/** Something wrong with one workbook, judged on its own — never a comparison
+    with an earlier load. `problem` means data was lost or a figure is now
+    wrong; `notice` means worth a look. Neither ever blocks a load. */
+export interface QualityWarning {
+  code: string
+  severity: 'problem' | 'notice'
+  message: string
+}
+
 /** One complete, read-only reading of ONE workbook. */
 export interface SnapshotInfo {
   id: string
@@ -217,6 +234,9 @@ export interface SnapshotInfo {
   identityKeys: string[]
   sources: SnapshotSource[]
   diff: SnapshotDiff | null
+  /** what was wrong with the workbook when it was read. Snapshots taken
+      before the check carry none. */
+  warnings: QualityWarning[]
   /** true only for snapshots migrated from before files were kept separate */
   combined: boolean
   createdAt: string
@@ -436,6 +456,8 @@ export interface LayerDashboardResponse {
   topRows: TopRow[]
   /** what kind of data this workbook holds, and so what to draw for it */
   profile: DashboardProfile
+  /** what was wrong with the workbook these figures came from */
+  warnings: QualityWarning[]
 }
 
 export interface AppSettings {

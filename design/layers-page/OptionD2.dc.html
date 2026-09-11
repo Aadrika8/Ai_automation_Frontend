@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #0d0d0d;
+      color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+    }
+    a { color: #3987e5; } a:hover { color: #5ba3f0; }
+    .card { background: #1a1a19; border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 12px; }
+    .lede { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+    .note { margin: 4px 0 0; font-size: 12.5px; color: #898781; line-height: 1.5; }
+  </style>
+</helmet>
+
+<div style="padding: 26px 30px; display: flex; flex-direction: column; gap: 18px;">
+
+  <div>
+    <div style="font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase;
+                color: #898781;">Same page as D1 — only the shape differs</div>
+    <h1 style="margin: 6px 0 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em;">
+      Widths from the real counts
+    </h1>
+  </div>
+
+  <div class="card" style="padding: 22px 24px; display: grid;
+                           grid-template-columns: 500px 1fr; gap: 34px; align-items: center;">
+    <svg viewBox="-6 -6 472 284" style="width: 100%; height: auto;" role="img"
+         aria-label="Testing pyramid drawn to the real record counts.">
+      <!-- width proportional to records, 210 = full width. This is the truth,
+           and the truth is not a pyramid. -->
+      <g>
+        <polygon points="228,216 232,216 232,270 228,270"
+                 fill="#383835" stroke="#0d0d0d" stroke-width="2" />
+        <text x="244" y="248" font-size="12.5" font-weight="600"
+              fill="#898781" font-family="system-ui, sans-serif">Unit · 0</text>
+      </g>
+      <g>
+        <polygon points="10,162 450,162 450,216 10,216"
+                 fill="#2163b6" stroke="#0d0d0d" stroke-width="2" />
+        <text x="230" y="194" text-anchor="middle" font-size="13" font-weight="600"
+              fill="#ffffff" font-family="system-ui, sans-serif">Regression · 210</text>
+      </g>
+      <g>
+        <polygon points="216,108 244,108 244,162 216,162"
+                 fill="#2a78d6" stroke="#0d0d0d" stroke-width="2" />
+        <text x="256" y="140" font-size="12.5" font-weight="600"
+              fill="#c3c2b7" font-family="system-ui, sans-serif">Feature · 13</text>
+      </g>
+      <g>
+        <polygon points="214,54 246,54 246,108 214,108"
+                 fill="#d03b3b" stroke="#0d0d0d" stroke-width="2" />
+        <text x="258" y="86" font-size="12.5" font-weight="600"
+              fill="#e66767" font-family="system-ui, sans-serif">System · 15</text>
+      </g>
+      <g>
+        <polygon points="189,0 271,0 271,54 189,54"
+                 fill="#d03b3b" stroke="#0d0d0d" stroke-width="2" />
+        <text x="283" y="32" font-size="12.5" font-weight="600"
+              fill="#e66767" font-family="system-ui, sans-serif">Acceptance · 39</text>
+      </g>
+    </svg>
+
+    <div>
+      <div class="lede">Honest, and almost unreadable.</div>
+      <p class="note">
+        Regression holds 210 of the release's 277 records, so at true scale it is the
+        only tier with any width and everything above it is a sliver. The violation
+        that matters — System's 15 against Feature's 13 — is a 2-pixel difference
+        nobody can see.
+      </p>
+      <p class="note">
+        It does say one true thing loudly: this is not a pyramid, it is a spike on a
+        slab. If that is the message you want the page to deliver, this is the shape
+        that delivers it.
+      </p>
+    </div>
+  </div>
+
+  <div class="card" style="padding: 22px 24px;">
+    <div class="lede">Why D1 draws the ideal instead</div>
+    <p class="note" style="max-width: 88ch;">
+      In D1 the trapezoids are fixed geometry — they are the <i>rule</i>, not the data.
+      The counts sit on each tier and the colour says which comparisons fail, so the
+      shape stays legible at any set of numbers. The cost is that a reader could take
+      the shape for the data and think the pyramid is healthier than it is, which is
+      why every tier carries its own count and the two broken boundaries are labelled
+      <span style="color: #e66767; font-family: ui-monospace, monospace; font-size: 11.5px;">39 ≥ 15</span>
+      and
+      <span style="color: #e66767; font-family: ui-monospace, monospace; font-size: 11.5px;">15 ≥ 13</span>
+      rather than left to the fill colour alone.
+    </p>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

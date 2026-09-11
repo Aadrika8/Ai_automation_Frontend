@@ -1,0 +1,211 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #0d0d0d;
+      color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+    }
+    a { color: #3987e5; } a:hover { color: #5ba3f0; }
+    .card { background: #1a1a19; border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 12px; }
+    .chip { display: flex; flex-direction: column; gap: 2px; padding: 10px 16px; }
+    .chip .k { font-size: 11px; color: #898781; }
+    .chip .v { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .tierrow { display: grid; grid-template-columns: 14px 1fr auto;
+               align-items: center; gap: 10px; padding: 7px 0;
+               border-bottom: 1px solid #201f1e; font-size: 12.5px; }
+    .tierrow:last-child { border-bottom: none; }
+    .layer { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+    .layer h2 { margin: 0; font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; }
+    .foot { display: flex; justify-content: space-between; align-items: flex-end;
+            border-top: 1px solid #2c2c2a; padding-top: 10px; font-size: 11.5px;
+            color: #898781; }
+    .foot b { display: block; font-size: 15px; font-weight: 600; color: #ffffff; }
+  </style>
+</helmet>
+
+<div style="padding: 26px 30px; display: flex; flex-direction: column; gap: 16px;">
+
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+    <h1 style="margin: 0; font-size: 23px; font-weight: 600; letter-spacing: -0.02em;">
+      Cellsens — Testing Layers
+    </h1>
+    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+      <div class="card" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px;">
+        <span style="font-size: 10.5px; letter-spacing: 0.06em; color: #898781;">RELEASE</span>
+        <span style="font-weight: 600;">4.5.1</span>
+        <span style="font-size: 10px; color: #0ca30c; background: rgba(12,163,12,0.12);
+                     border-radius: 4px; padding: 2px 6px;">current</span>
+      </div>
+      <button style="background: #3987e5; color: #fff; border: none; border-radius: 8px;
+                     padding: 8px 14px; font-size: 13px; font-weight: 600;
+                     font-family: inherit; cursor: pointer;">Load from Excel</button>
+      <button style="background: none; color: #c3c2b7; border: 1px solid #2c2c2a;
+                     border-radius: 8px; padding: 8px 14px; font-size: 13px;
+                     font-weight: 600; font-family: inherit; cursor: pointer;">+ Add layer</button>
+    </div>
+  </div>
+
+  <!-- the strip from Option A, unchanged -->
+  <div class="card" style="display: flex; align-items: stretch; overflow: hidden;">
+    <div class="chip" style="background: rgba(208,59,59,0.10); border-right: 1px solid #2c2c2a;
+                             flex-direction: row; align-items: center; gap: 10px; min-width: 246px;">
+      <span style="color: #e66767; display: flex;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.14h17.2a1.5 1.5 0 0 0 1.3-2.14L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+          <path d="M12 9v4" /><path d="M12 16.5h.01" />
+        </svg>
+      </span>
+      <div>
+        <div style="color: #e66767; font-size: 15px; font-weight: 600;">2 pyramid violations</div>
+        <div class="k">System and Acceptance</div>
+      </div>
+    </div>
+    <div class="chip" style="border-right: 1px solid #2c2c2a; flex: 1;">
+      <span class="k">Feature → System</span><span class="v">53.8%</span>
+    </div>
+    <div class="chip" style="border-right: 1px solid #2c2c2a; flex: 1;">
+      <span class="k">System → Feature</span><span class="v">77.8%</span>
+    </div>
+    <div class="chip" style="border-right: 1px solid #2c2c2a; flex: 1;">
+      <span class="k">Automation</span>
+      <span style="color: #898781; font-size: 14px; padding-top: 3px;">not measured</span>
+    </div>
+    <div class="chip" style="flex: 1;">
+      <span class="k">Workbooks matched</span>
+      <span class="v">4 <span style="color: #898781; font-weight: 400;">of 5</span></span>
+    </div>
+  </div>
+
+  <!-- the pyramid, drawn to its ideal shape and coloured by what is real -->
+  <div class="card" style="padding: 20px 24px; display: grid;
+                           grid-template-columns: 500px 1fr; gap: 34px; align-items: center;">
+
+    <svg viewBox="-6 -6 472 284" style="width: 100%; height: auto;" role="img"
+         aria-label="Testing pyramid: Acceptance and System break the rule.">
+      <!-- base -> tip, each tier a link to that layer -->
+      <g>
+        <polygon points="37,216 423,216 460,270 0,270"
+                 fill="#383835" stroke="#0d0d0d" stroke-width="2" />
+        <text x="230" y="248" text-anchor="middle" font-size="13" font-weight="600"
+              fill="#898781" font-family="system-ui, sans-serif">Unit · 0</text>
+      </g>
+      <g>
+        <polygon points="74,162 386,162 423,216 37,216"
+                 fill="#2163b6" stroke="#0d0d0d" stroke-width="2" />
+        <text x="230" y="194" text-anchor="middle" font-size="13" font-weight="600"
+              fill="#ffffff" font-family="system-ui, sans-serif">Regression · 210</text>
+      </g>
+      <g>
+        <polygon points="111,108 349,108 386,162 74,162"
+                 fill="#2a78d6" stroke="#0d0d0d" stroke-width="2" />
+        <text x="230" y="140" text-anchor="middle" font-size="13" font-weight="600"
+              fill="#ffffff" font-family="system-ui, sans-serif">Feature · 13</text>
+      </g>
+      <g>
+        <polygon points="148,54 312,54 349,108 111,108"
+                 fill="#d03b3b" stroke="#0d0d0d" stroke-width="2" />
+        <text x="230" y="86" text-anchor="middle" font-size="13" font-weight="600"
+              fill="#ffffff" font-family="system-ui, sans-serif">System · 15</text>
+      </g>
+      <g>
+        <polygon points="185,0 275,0 312,54 148,54"
+                 fill="#d03b3b" stroke="#0d0d0d" stroke-width="2" />
+        <text x="230" y="34" text-anchor="middle" font-size="12" font-weight="600"
+              fill="#ffffff" font-family="system-ui, sans-serif">Acceptance · 39</text>
+      </g>
+
+      <!-- the broken boundaries, called out where they break -->
+      <g font-family="system-ui, sans-serif" font-size="11" fill="#e66767">
+        <line x1="312" y1="54" x2="404" y2="34" stroke="#e66767" stroke-width="1"
+              stroke-dasharray="3 2" />
+        <text x="408" y="37">39 ≥ 15</text>
+        <line x1="349" y1="108" x2="404" y2="96" stroke="#e66767" stroke-width="1"
+              stroke-dasharray="3 2" />
+        <text x="408" y="99">15 ≥ 13</text>
+      </g>
+    </svg>
+
+    <div>
+      <div style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">
+        The pyramid is upside down at the top.
+      </div>
+      <p style="margin: 4px 0 14px; font-size: 12.5px; color: #898781; line-height: 1.5;">
+        Each layer should hold fewer test cases than the one below it. The shape here
+        is the rule; the colour is what your workbooks actually say.
+      </p>
+
+      <div class="tierrow">
+        <i style="width: 10px; height: 10px; border-radius: 2px; background: #d03b3b;"></i>
+        <span>Acceptance</span>
+        <span style="color: #e66767;">39 — should be under 15</span>
+      </div>
+      <div class="tierrow">
+        <i style="width: 10px; height: 10px; border-radius: 2px; background: #d03b3b;"></i>
+        <span>System</span>
+        <span style="color: #e66767;">15 — should be under 13</span>
+      </div>
+      <div class="tierrow">
+        <i style="width: 10px; height: 10px; border-radius: 2px; background: #2a78d6;"></i>
+        <span>Feature</span><span style="color: #898781;">13</span>
+      </div>
+      <div class="tierrow">
+        <i style="width: 10px; height: 10px; border-radius: 2px; background: #2163b6;"></i>
+        <span>Regression</span><span style="color: #898781;">210</span>
+      </div>
+      <div class="tierrow">
+        <i style="width: 10px; height: 10px; border-radius: 2px; background: #383835;"></i>
+        <span style="color: #898781;">Unit</span>
+        <span style="color: #898781;">no unit.xlsx — not checked</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #898781;
+              padding: 0 2px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+    </svg>
+    <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;">D:\New folder\CellSens\4.5.1</span>
+    <span>·</span><a href="#" style="text-decoration: none;">Change folder</a>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px;">
+    <div class="card layer" style="opacity: 0.7;">
+      <h2 style="color: #898781;">Unit</h2>
+      <div class="foot"><div><b style="color: #898781;">0</b>records</div></div>
+    </div>
+    <div class="card layer">
+      <h2>Regression</h2>
+      <div class="foot"><div><b>210</b>records</div><div>2 files</div></div>
+    </div>
+    <div class="card layer">
+      <h2>Feature</h2>
+      <div class="foot"><div><b>13</b>records</div><div>1 file</div></div>
+    </div>
+    <div class="card layer" style="border-color: #d03b3b;">
+      <h2>System</h2>
+      <div class="foot"><div><b style="color: #e66767;">15</b>records</div><div>1 file</div></div>
+    </div>
+    <div class="card layer" style="border-color: #d03b3b;">
+      <h2>Acceptance</h2>
+      <div class="foot"><div><b style="color: #e66767;">39</b>records</div><div>1 file</div></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

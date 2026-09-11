@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #f9f9f7;
+      color: #0b0b0b;
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+    }
+    a { color: #2a78d6; }
+    a:hover { color: #1c5ba8; }
+  </style>
+</helmet>
+
+<div style="padding: 32px 40px; display: flex; flex-direction: column; gap: 18px;">
+
+  <div style="display: flex; flex-direction: column; gap: 3px;">
+    <h3 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">
+      Two severities, and only two
+    </h3>
+    <p style="margin: 0; font-size: 12px; color: #898781; line-height: 1.45;">
+      The split is whether a number on screen is now wrong. Neither ever stops a load.
+    </p>
+  </div>
+
+  <!-- problem -->
+  <div style="display: flex; flex-direction: column; gap: 8px;">
+    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase;
+                 letter-spacing: 0.06em; color: #898781;">Problem — data was lost, or a figure is wrong</span>
+    <div style="display: flex; gap: 7px; align-items: flex-start;
+                background: rgba(208,59,59,0.10); border-radius: 8px; padding: 8px 10px;">
+      <span style="color: #a32626; display: flex; flex-shrink: 0; margin-top: 1px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.14h17.2a1.5 1.5 0 0 0 1.3-2.14L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+          <path d="M12 9v4" /><path d="M12 16.5h.01" />
+        </svg>
+      </span>
+      <p style="margin: 0; font-size: 12.5px; color: #52514e; line-height: 1.45;">
+        <span style="color: #a32626; font-weight: 600;">The consequence leads.</span>
+        Then the cause, then the evidence — never the rule name.
+      </p>
+    </div>
+    <p style="margin: 0; font-size: 12px; color: #898781; line-height: 1.5;">
+      Tinted fill, because it has to stop the eye. Reuses the app's existing error
+      treatment exactly:
+      <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;">bg-critical/10</span>
+      with
+      <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;">text-crit-text</span>.
+    </p>
+  </div>
+
+  <!-- notice -->
+  <div style="display: flex; flex-direction: column; gap: 8px;">
+    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase;
+                 letter-spacing: 0.06em; color: #898781;">Notice — worth a look, nothing lost</span>
+    <div style="display: flex; gap: 7px; align-items: flex-start; padding: 0 10px;">
+      <span style="color: #fab219; display: flex; flex-shrink: 0; margin-top: 1px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+        </svg>
+      </span>
+      <p style="margin: 0; font-size: 12.5px; color: #52514e; line-height: 1.45;">
+        Same voice, no fill — an amber mark and a line of text.
+      </p>
+    </div>
+    <p style="margin: 0; font-size: 12px; color: #898781; line-height: 1.5;">
+      No panel, so a sheet with six of them stays readable. This is the fatigue
+      guard: only a problem gets a filled block.
+    </p>
+  </div>
+
+  <div style="height: 1px; background: #e1e0d9;"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <span style="font-size: 11px; font-weight: 600; text-transform: uppercase;
+                 letter-spacing: 0.06em; color: #898781;">Rules the copy follows</span>
+    <ul style="margin: 0; padding-left: 18px; font-size: 12.5px; color: #52514e; line-height: 1.6;">
+      <li>Name the consequence before the cause — <em>9 test cases were dropped</em>, not <em>duplicate row detected</em>.</li>
+      <li>Group by kind, never one per column — 4 empty columns is one line.</li>
+      <li>Problems sort above notices. Never alphabetical, never by column order.</li>
+      <li>Quote the offending value so it can be found in the sheet.</li>
+      <li>Nothing is ever blocked. A load that refuses leaves you with nothing.</li>
+    </ul>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

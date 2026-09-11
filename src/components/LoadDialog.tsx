@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react'
 import { api, type SnapshotPeriod, type SnapshotRunResult, type SourceStatus } from '../api'
 import { Modal } from './Modal'
+import { QualityWarnings } from './QualityWarnings'
 import { cx, fmt, timeAgo } from '../lib/format'
 import { monthLabel, thisMonth } from '../lib/period'
 
@@ -194,6 +195,9 @@ export function LoadDialog({ appId, releaseId, releaseName, layerId, onClose, on
       {result && (
         <div className="space-y-3">
           <p className="text-[11.5px] text-muted">{monthLabel(result.period)}</p>
+          {/* about the release rather than one workbook — two files holding
+              the same rows, for one */}
+          <QualityWarnings warnings={result.warnings} />
           {result.files.map(l => (
             <div key={`${l.layerId}:${l.file}`} className="rounded-lg border border-grid p-2.5">
               <div className="flex items-baseline justify-between gap-2">
@@ -208,7 +212,12 @@ export function LoadDialog({ appId, releaseId, releaseName, layerId, onClose, on
               {l.error ? (
                 <p className="text-[12px] text-crit-text mt-1">{l.error}</p>
               ) : !l.created ? (
-                <p className="text-[12px] text-muted mt-1">{l.reason}</p>
+                <p className="text-[12px] text-muted mt-1">
+                  {l.renamedFrom && (
+                    <b className="text-ink2 font-semibold">Renamed. </b>
+                  )}
+                  {l.reason}
+                </p>
               ) : (
                 <>
                   <p className="text-[12px] text-ink2 mt-1">
@@ -229,6 +238,9 @@ export function LoadDialog({ appId, releaseId, releaseName, layerId, onClose, on
               {l.file && l.file !== l.fileName && (
                 <p className="text-[11px] text-muted mt-1">{l.file}</p>
               )}
+              {/* reported whether or not a snapshot was written — an unchanged
+                  workbook still has whatever is wrong with it */}
+              <QualityWarnings warnings={l.warnings} className="mt-2" />
             </div>
           ))}
           <button onClick={onClose}

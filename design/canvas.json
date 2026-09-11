@@ -1,0 +1,32 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Load result", "x": 0, "y": 0, "w": 560, "h": 880 },
+    { "file": "HistoryRow.dc.html", "title": "Snapshot history", "x": 660, "y": 0, "w": 900, "h": 560 },
+    { "file": "LayerStrip.dc.html", "title": "Layer dashboard", "x": 660, "y": 680, "w": 900, "h": 420 },
+    { "file": "Severities.dc.html", "title": "Severities & copy rules", "x": 0, "y": 1010, "w": 560, "h": 560 }
+  ],
+  "annotations": [
+    {
+      "id": "surface-1",
+      "x": 0,
+      "y": -130,
+      "w": 560,
+      "text": "1 — At the load.\nThe moment the mistake is still cheap to fix. Warnings sit under the file they belong to, not in one pile at the top."
+    },
+    {
+      "id": "surface-2",
+      "x": 660,
+      "y": -130,
+      "w": 420,
+      "text": "2 — In the history.\nA problem keeps its panel, because it is still true. A notice shrinks to one line."
+    },
+    {
+      "id": "fatigue",
+      "x": 1140,
+      "y": -130,
+      "w": 420,
+      "text": "System_Test.xlsx would emit 6 warnings. Grouping the 4 empty columns into one line is what keeps that readable."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
