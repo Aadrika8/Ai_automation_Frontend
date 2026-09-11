@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #f9f9f7;
+      color: #0b0b0b;
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+    }
+    a { color: #2a78d6; }
+    a:hover { color: #1c5ba8; }
+  </style>
+</helmet>
+
+<div style="padding: 32px 40px; display: flex; flex-direction: column; gap: 12px;">
+
+  <div style="display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px;">
+    <h3 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">
+      Snapshot history
+    </h3>
+    <p style="margin: 0; font-size: 11.5px; color: #898781;">
+      Acceptance Testing · every reading of every workbook, newest first
+    </p>
+  </div>
+
+  <!-- current snapshot, carrying a problem -->
+  <div style="background: #fcfcfb; border: 1px solid #2a78d6; border-radius: 12px; padding: 16px;
+              box-shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);
+              background-color: rgba(42,120,214,0.03);
+              display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 20px;">
+    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 112px;">
+      <span style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">Sep 2026</span>
+        <span style="font-size: 10px; font-weight: 600; text-transform: uppercase;
+                     letter-spacing: 0.04em; color: #006300; background: rgba(0,99,0,0.10);
+                     border-radius: 4px; padding: 2px 6px;">current</span>
+      </span>
+      <span style="font-size: 11px; color: #898781;">Acceptance_Test.xlsx · #2</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 260px;">
+      <span style="font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums;">
+        38 records
+        <span style="font-weight: 400; color: #898781;">
+          · 9 columns · 1 duplicate skipped
+        </span>
+      </span>
+      <span style="font-size: 12px; color: #898781;">
+        0 added · 2 changed · 1 removed vs #1
+      </span>
+
+      <div style="display: flex; gap: 7px; align-items: flex-start; margin-top: 2px;
+                  background: rgba(208,59,59,0.10); border-radius: 8px; padding: 8px 10px;">
+        <span style="color: #a32626; display: flex; flex-shrink: 0; margin-top: 1px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.14h17.2a1.5 1.5 0 0 0 1.3-2.14L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+            <path d="M12 9v4" /><path d="M12 16.5h.01" />
+          </svg>
+        </span>
+        <p style="margin: 0; font-size: 12.5px; color: #52514e; line-height: 1.45;">
+          <span style="color: #a32626; font-weight: 600;">9 test cases were dropped.</span>
+          Two rows share
+          <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;">Win10&nbsp;Pro&nbsp;64bit · Version&nbsp;Update · Rahul</span>
+          but record different counts.
+        </p>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-end; min-width: 120px;">
+      <span style="font-size: 11px; color: #898781;">8 Sep 2026, 14:12</span>
+      <span style="font-size: 11px; color: #898781;">by admin</span>
+    </div>
+  </div>
+
+  <!-- an older snapshot, clean -->
+  <div style="background: #fcfcfb; border: 1px solid rgba(11,11,11,0.10); border-radius: 12px;
+              padding: 16px; box-shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);
+              display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 20px;">
+    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 112px;">
+      <span style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">Aug 2026</span>
+      <span style="font-size: 11px; color: #898781;">Acceptance_Test.xlsx · #1</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 260px;">
+      <span style="font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums;">
+        39 records
+        <span style="font-weight: 400; color: #898781;">· 9 columns</span>
+      </span>
+      <span style="font-size: 12px; color: #898781;">First snapshot of this testing type.</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-end; min-width: 120px;">
+      <span style="font-size: 11px; color: #898781;">2 Sep 2026, 18:08</span>
+      <span style="font-size: 11px; color: #898781;">by admin</span>
+    </div>
+  </div>
+
+  <!-- a snapshot whose only issue is a notice: badge, no panel -->
+  <div style="background: #fcfcfb; border: 1px solid rgba(11,11,11,0.10); border-radius: 12px;
+              padding: 16px; box-shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);
+              display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 20px;">
+    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 112px;">
+      <span style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">Jul 2026</span>
+      <span style="font-size: 11px; color: #898781;">Acceptance_Test.xlsx · #1</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 260px;">
+      <span style="font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums;">
+        36 records
+        <span style="font-weight: 400; color: #898781;">· 9 columns · 3 duplicates skipped</span>
+      </span>
+      <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #898781;">
+        <span style="color: #fab219; display: flex;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+          </svg>
+        </span>
+        1 notice — open to read it
+      </span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-end; min-width: 120px;">
+      <span style="font-size: 11px; color: #898781;">4 Aug 2026, 09:30</span>
+      <span style="font-size: 11px; color: #898781;">by qa</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

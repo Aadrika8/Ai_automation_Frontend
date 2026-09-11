@@ -18,6 +18,7 @@ import { ReleaseSwitcher } from '../components/ReleaseSwitcher'
 import { FileSelector, MERGED } from '../components/FileSelector'
 import { LoadDialog } from '../components/LoadDialog'
 import { SnapshotHistory } from '../components/SnapshotHistory'
+import { QualityWarnings } from '../components/QualityWarnings'
 /* UPLOAD DISABLED: import { UploadDialog } from '../components/UploadDialog' */
 import { RefreshIcon, SearchIcon } from '../components/icons'
 
@@ -534,6 +535,11 @@ function DashboardView({ dash, loading, order, onDimension }: {
   order: number
   onDimension: (key: string) => void
 }) {
+  // What was wrong with the workbook these figures came from. It sits above
+  // whichever dashboard is drawn and never replaces one: the figures are still
+  // the best available reading, and saying so beats an empty screen.
+  const quality = <QualityWarnings warnings={dash?.warnings} />
+
   // A workbook that records outcomes gets a dashboard about them. Anything
   // else falls through to the count-and-group view below, unchanged.
   //
@@ -541,13 +547,13 @@ function DashboardView({ dash, loading, order, onDimension }: {
   // so changing the breakdown updates the figures in place instead of dropping
   // the whole view — and the select the user just used — to a skeleton and back.
   if (dash?.profile?.kind === 'run_results') {
-    return <RunResultsView dash={dash} onDimension={onDimension} />
+    return <div className="space-y-5">{quality}<RunResultsView dash={dash} onDimension={onDimension} /></div>
   }
   if (dash?.profile?.kind === 'status') {
-    return <StatusView dash={dash} />
+    return <div className="space-y-5">{quality}<StatusView dash={dash} /></div>
   }
   if (dash?.profile?.kind === 'inventory') {
-    return <InventoryView dash={dash} />
+    return <div className="space-y-5">{quality}<InventoryView dash={dash} /></div>
   }
   const mergedNote = dash?.merged ? (
     <div className="flex flex-wrap items-center gap-2 rounded-lg bg-accent-soft px-3.5 py-2.5 text-[12.5px]">
@@ -571,6 +577,7 @@ function DashboardView({ dash, loading, order, onDimension }: {
     : measures[measures.length - 1]
   return (
     <div className="space-y-5">
+      {quality}
       {mergedNote}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
         {/* merged data can hold several measures — showing only one would hide

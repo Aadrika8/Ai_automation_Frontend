@@ -63,6 +63,11 @@ export const AlertTriangleIcon = ({ size = 14, className }: IconProps) => (
     <path d="M12 9v4" /><path d="M12 16.5h.01" />
   </svg>
 )
+export const InfoIcon = ({ size = 14, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+  </svg>
+)
 export const CheckIcon = ({ size = 12, className }: IconProps) => (
   <svg {...base(size)} className={className} strokeWidth={3}><path d="M20 6 9 17l-5-5" /></svg>
 )

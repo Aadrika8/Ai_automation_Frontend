@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #0d0d0d;
+      color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+    }
+    a { color: #3987e5; } a:hover { color: #5ba3f0; }
+    .card { background: #1a1a19; border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 12px; }
+    .tier { display: grid; grid-template-columns: 132px 1fr 64px 210px;
+            align-items: center; gap: 14px; padding: 9px 0; cursor: pointer;
+            border-bottom: 1px solid #201f1e; }
+    .tier:last-child { border-bottom: none; }
+    .tier .name { font-size: 13px; font-weight: 600; }
+    .tier .n { font-size: 14px; font-weight: 600; text-align: right;
+               font-variant-numeric: tabular-nums; }
+    .tier .note { font-size: 11.5px; color: #898781; }
+    .bar { height: 16px; border-radius: 3px; }
+  </style>
+</helmet>
+
+<div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 16px;">
+
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+    <h1 style="margin: 0; font-size: 23px; font-weight: 600; letter-spacing: -0.02em;">
+      Cellsens — Testing Layers
+    </h1>
+    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+      <div class="card" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px;">
+        <span style="font-size: 10.5px; letter-spacing: 0.06em; color: #898781;">RELEASE</span>
+        <span style="font-weight: 600;">4.5.1</span>
+        <span style="font-size: 10px; color: #0ca30c; background: rgba(12,163,12,0.12);
+                     border-radius: 4px; padding: 2px 6px;">current</span>
+      </div>
+      <button style="background: #3987e5; color: #fff; border: none; border-radius: 8px;
+                     padding: 8px 14px; font-size: 13px; font-weight: 600;
+                     font-family: inherit; cursor: pointer;">Load from Excel</button>
+      <button style="background: none; color: #c3c2b7; border: 1px solid #2c2c2a;
+                     border-radius: 8px; padding: 8px 14px; font-size: 13px;
+                     font-weight: 600; font-family: inherit; cursor: pointer;">+ Add layer</button>
+    </div>
+  </div>
+
+  <!-- the pyramid rule is about relative size, so it is drawn rather than described.
+       Each row is the navigation to that layer. -->
+  <div class="card" style="padding: 20px 22px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between;
+                gap: 16px; margin-bottom: 14px;">
+      <div>
+        <div style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">
+          The pyramid is upside down at the top.
+        </div>
+        <div style="font-size: 12px; color: #898781; margin-top: 2px;">
+          Each layer should hold fewer test cases than the one below it. Two do not.
+        </div>
+      </div>
+      <div style="display: flex; gap: 20px; flex-shrink: 0; text-align: right;">
+        <div><div style="font-size: 11px; color: #898781;">Feature → System</div>
+             <div style="font-size: 16px; font-weight: 600;">53.8%</div></div>
+        <div><div style="font-size: 11px; color: #898781;">System → Feature</div>
+             <div style="font-size: 16px; font-weight: 600;">77.8%</div></div>
+        <div><div style="font-size: 11px; color: #898781;">Automation</div>
+             <div style="font-size: 13px; color: #898781; padding-top: 3px;">not measured</div></div>
+      </div>
+    </div>
+
+    <div class="tier">
+      <span class="name" style="color: #e66767;">Acceptance</span>
+      <span><span class="bar" style="display: block; width: 18.6%; background: #d03b3b;"></span></span>
+      <span class="n" style="color: #e66767;">39</span>
+      <span class="note" style="color: #e66767;">wider than System (15)</span>
+    </div>
+    <div class="tier">
+      <span class="name" style="color: #e66767;">System</span>
+      <span><span class="bar" style="display: block; width: 7.1%; background: #d03b3b;"></span></span>
+      <span class="n" style="color: #e66767;">15</span>
+      <span class="note" style="color: #e66767;">wider than Feature (13)</span>
+    </div>
+    <div class="tier">
+      <span class="name">Feature</span>
+      <span><span class="bar" style="display: block; width: 6.2%; background: #2a78d6;"></span></span>
+      <span class="n">13</span>
+      <span class="note">1 file · Sep 2026</span>
+    </div>
+    <div class="tier">
+      <span class="name">Regression</span>
+      <span><span class="bar" style="display: block; width: 100%; background: #2163b6;"></span></span>
+      <span class="n">210</span>
+      <span class="note">2 files · Sep 2026</span>
+    </div>
+    <div class="tier">
+      <span class="name" style="color: #898781;">Unit</span>
+      <span><span class="bar" style="display: block; width: 2px; background: #383835;"></span></span>
+      <span class="n" style="color: #898781;">0</span>
+      <span class="note">no unit.xlsx in the folder</span>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #898781;
+              padding: 0 2px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+    </svg>
+    <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;">D:\New folder\CellSens\4.5.1</span>
+    <span>·</span><span>4 of 5 layers matched</span>
+    <span>·</span><a href="#" style="text-decoration: none;">Change folder</a>
+  </div>
+
+  <div style="font-size: 11px; color: #898781; letter-spacing: 0.06em; text-transform: uppercase;
+              padding: 4px 2px 0;">Open a layer</div>
+  <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;">
+    <div class="card" style="padding: 14px 16px; cursor: pointer;">
+      <div style="font-size: 13px; font-weight: 600; color: #898781;">Unit</div>
+      <div style="font-size: 19px; font-weight: 600; margin-top: 3px; color: #898781;">0</div>
+      <div style="font-size: 11px; color: #898781;">never loaded</div>
+    </div>
+    <div class="card" style="padding: 14px 16px; cursor: pointer;">
+      <div style="font-size: 13px; font-weight: 600;">Regression</div>
+      <div style="font-size: 19px; font-weight: 600; margin-top: 3px;">210</div>
+      <div style="font-size: 11px; color: #898781;">2 files</div>
+    </div>
+    <div class="card" style="padding: 14px 16px; cursor: pointer;">
+      <div style="font-size: 13px; font-weight: 600;">Feature</div>
+      <div style="font-size: 19px; font-weight: 600; margin-top: 3px;">13</div>
+      <div style="font-size: 11px; color: #898781;">1 file</div>
+    </div>
+    <div class="card" style="padding: 14px 16px; cursor: pointer; border-color: #d03b3b;">
+      <div style="font-size: 13px; font-weight: 600;">System</div>
+      <div style="font-size: 19px; font-weight: 600; margin-top: 3px; color: #e66767;">15</div>
+      <div style="font-size: 11px; color: #e66767;">breaks the pyramid</div>
+    </div>
+    <div class="card" style="padding: 14px 16px; cursor: pointer; border-color: #d03b3b;">
+      <div style="font-size: 13px; font-weight: 600;">Acceptance</div>
+      <div style="font-size: 19px; font-weight: 600; margin-top: 3px; color: #e66767;">39</div>
+      <div style="font-size: 11px; color: #e66767;">breaks the pyramid</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -17,8 +17,8 @@ import { ReleaseSwitcher } from '../components/ReleaseSwitcher'
 import { LoadDialog } from '../components/LoadDialog'
 /* UPLOAD DISABLED: import { UploadDialog } from '../components/UploadDialog' */
 import {
-  AlertTriangleIcon, ArrowRightIcon, CheckIcon, ChevronDownIcon, FolderIcon, LinkIcon,
-  PlusIcon, RefreshIcon, RulerIcon, TrashIcon,
+  AlertTriangleIcon, ArrowRightIcon, CheckIcon, FolderIcon,
+  PlusIcon, RefreshIcon, TrashIcon,
 } from '../components/icons'
 
 /* ---------- Testing Pyramid rule ----------
@@ -221,7 +221,39 @@ function AddLayerModal({ appId, releaseId, releaseName, layers, onClose, onCreat
    The two percentages belong on this page because they are a property of the
    release rather than of any one testing layer: neither the Feature card nor
    the System card can own a number that is about the gap between them. */
-function CoverageCard({ appId, releaseId, layers, reloadKey }: {
+/* ---------- The status strip ----------
+   One row of chips instead of three stacked banners. Each answers a different
+   question about the release, and each is a link to the page that answers it
+   properly. The point of putting them side by side is that none of them
+   deserves a full-width row of its own — together they are a header, apart
+   they were a wall. */
+
+function Chip({ label, children, onClick, ariaLabel }: {
+  label: string
+  children: ReactNode
+  onClick?: () => void
+  ariaLabel?: string
+}) {
+  return (
+    <div
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={ariaLabel}
+      onClick={onClick}
+      onKeyDown={e => { if (onClick && (e.key === 'Enter' || e.key === ' ')) onClick() }}
+      className={cx('flex-1 min-w-[150px] px-4 py-2.5 flex flex-col gap-0.5',
+                    onClick && 'cursor-pointer hover:bg-accent-soft/40 transition-colors')}
+    >
+      <div className="text-[11px] text-muted">{label}</div>
+      {children}
+    </div>
+  )
+}
+
+const chipValue = 'text-[17px] font-semibold tracking-tight tabular-nums'
+
+/** Feature ↔ System, as two figures. Absent when the release has no such pair. */
+function CoverageChips({ appId, releaseId, layers, reloadKey }: {
   appId: string
   releaseId: string
   layers: LayerInfo[]
@@ -229,7 +261,6 @@ function CoverageCard({ appId, releaseId, layers, reloadKey }: {
 }) {
   const navigate = useNavigate()
   const pair = ['feature', 'system'].every(id => layers.some(l => l.id === id))
-
   const { data } = useData<CoverageResponse | null>(
     () => (pair && releaseId ? api.getCoverage(appId, releaseId) : Promise.resolve(null)),
     [appId, releaseId, pair, reloadKey],
@@ -238,56 +269,29 @@ function CoverageCard({ appId, releaseId, layers, reloadKey }: {
 
   const summary = data?.summary
   const blocked = data?.errorCode ? data.error : null
-  const gaps = summary ? summary.missingInSystem + summary.missingInFeature : 0
-  const clean = Boolean(summary) && gaps === 0 && !blocked
+  const go = () => navigate(withRelease(`/apps/${appId}/coverage`, releaseId))
 
-  const figure = (label: string, value: number) => (
-    <div>
-      <div className="text-[11px] text-muted">{label}</div>
-      <div className="text-[15px] font-semibold tabular-nums">{value.toFixed(1)}%</div>
-    </div>
-  )
-
+  if (blocked || !summary) {
+    return (
+      <Chip label="Feature ↔ System" onClick={go} ariaLabel="Feature to System coverage">
+        <div className="text-[13px] text-muted pt-0.5">{blocked ?? 'Checking…'}</div>
+      </Chip>
+    )
+  }
   return (
-    <Card
-      className="mt-6 p-4.5 flex flex-wrap items-center gap-x-6 gap-y-3 cursor-pointer
-                 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:border-accent"
-      role="button"
-      tabIndex={0}
-      onClick={() => navigate(withRelease(`/apps/${appId}/coverage`, releaseId))}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate(withRelease(`/apps/${appId}/coverage`, releaseId)) }}
-      ariaLabel="Feature to System coverage"
-    >
-      <div className="flex items-center gap-2.5 flex-1 min-w-[210px]">
-        <LinkIcon className="shrink-0 text-accent" />
-        <div>
-          <div className="text-[12.5px] font-semibold">Feature ↔ System coverage</div>
-          <div className="text-[11px] text-muted">
-            {blocked ?? (clean
-              ? 'Every feature is verified, and every system item is planned'
-              : summary
-                ? `${fmt(gaps)} gap${gaps === 1 ? '' : 's'} across both directions`
-                : 'Checking…')}
-          </div>
-        </div>
-      </div>
-      {summary && !blocked && (
-        <div className="flex items-center gap-6">
-          {figure('Feature → System', summary.forwardCoveragePct)}
-          {figure('System → Feature', summary.backwardCoveragePct)}
-        </div>
-      )}
-      <ArrowRightIcon className="text-muted" />
-    </Card>
+    <>
+      <Chip label="Feature → System" onClick={go} ariaLabel="Feature to System coverage">
+        <div className={chipValue}>{summary.forwardCoveragePct.toFixed(1)}%</div>
+      </Chip>
+      <Chip label="System → Feature" onClick={go} ariaLabel="System to Feature coverage">
+        <div className={chipValue}>{summary.backwardCoveragePct.toFixed(1)}%</div>
+      </Chip>
+    </>
   )
 }
 
-/* Automation coverage, summarised.
-
-   A release-level property like the coverage card above it: no single testing
-   layer owns the count-weighted figure, and the industry reference it sits
-   beside belongs to none of them either. */
-function BenchmarkCard({ appId, releaseId, reloadKey }: {
+/** A release-level figure: no single layer owns the count-weighted number. */
+function AutomationChip({ appId, releaseId, reloadKey }: {
   appId: string
   releaseId: string
   reloadKey: number
@@ -297,39 +301,142 @@ function BenchmarkCard({ appId, releaseId, reloadKey }: {
     () => (releaseId ? api.getAutomationCoverage(appId, releaseId) : Promise.resolve(null)),
     [appId, releaseId, reloadKey],
   )
-  const go = () => navigate(withRelease(`/apps/${appId}/benchmark`, releaseId))
   const evident = data?.evident
-  const reference = data?.reference
+  return (
+    <Chip label="Automation"
+          onClick={() => navigate(withRelease(`/apps/${appId}/benchmark`, releaseId))}
+          ariaLabel="Automation coverage against the industry reference">
+      {evident?.measured
+        ? <div className={chipValue}>{evident.coveragePct?.toFixed(1)}%</div>
+        : <div className="text-[13px] text-muted pt-0.5">
+            {data ? 'not measured' : 'Checking…'}
+          </div>}
+    </Chip>
+  )
+}
+
+/* ---------- The pyramid, drawn ----------
+   The rule is about relative size, so it is worth a shape rather than a
+   sentence. The trapezoids are the *rule*, not the data: fixed geometry that
+   stays legible whatever the counts are. What is real is the colour, the count
+   on every tier, and the comparison spelled out on each boundary that breaks —
+   without those a reader could take the tidy shape for a healthy pyramid.
+
+   A layer with no rows is grey rather than green: the rule cannot be checked
+   against zero, which is not the same as passing it. */
+
+const TIER_H = 54
+const APEX_W = 90
+const BASE_W = 460
+
+function PyramidPanel({ layers, relationByUpperId, onOpen }: {
+  /** bottom-first, as the pyramid is ordered */
+  layers: LayerInfo[]
+  relationByUpperId: Map<string, PyramidRelation>
+  onOpen: (layerId: string) => void
+}) {
+  if (layers.length < 2) return null
+  const n = layers.length
+  const height = n * TIER_H
+  const step = (BASE_W - APEX_W) / n
+  const cx0 = BASE_W / 2
+
+  // drawn tip-first, so the highest layer is the top trapezoid
+  const tiers = [...layers].reverse().map((layer, i) => {
+    const relation = relationByUpperId.get(layer.id)
+    const violated = relation?.violated ?? false
+    const empty = layer.recordCount === 0
+    const wTop = APEX_W + step * i
+    const wBot = APEX_W + step * (i + 1)
+    const yTop = i * TIER_H
+    const yBot = yTop + TIER_H
+    return {
+      layer, violated, empty, relation, yTop, yBot, wBot,
+      points: [
+        `${cx0 - wTop / 2},${yTop}`, `${cx0 + wTop / 2},${yTop}`,
+        `${cx0 + wBot / 2},${yBot}`, `${cx0 - wBot / 2},${yBot}`,
+      ].join(' '),
+      fill: violated ? 'var(--critical)'
+        : empty ? 'var(--axis)'
+          : `var(${layerAccentVar(layer.order, n)})`,
+    }
+  })
+
+  const broken = tiers.filter(t => t.violated)
 
   return (
-    <Card
-      className="mt-4 p-4.5 flex flex-wrap items-center gap-x-6 gap-y-3 cursor-pointer
-                 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:border-accent"
-      role="button"
-      tabIndex={0}
-      onClick={go}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') go() }}
-      ariaLabel="Automation coverage against the industry reference"
-    >
-      <div className="flex items-center gap-2.5 flex-1 min-w-[210px]">
-        <RulerIcon className="shrink-0 text-accent" />
+    <Card className="mt-4 p-5 grid gap-8 lg:grid-cols-[minmax(0,440px)_1fr] items-center">
+      <svg viewBox={`-8 -8 ${BASE_W + 120} ${height + 16}`} className="w-full h-auto"
+           role="img"
+           aria-label={broken.length === 0
+             ? 'Testing pyramid: every layer holds fewer test cases than the one below it.'
+             : `Testing pyramid: ${broken.length} layer(s) hold more test cases than the layer below.`}>
+        {tiers.map(t => (
+          <g key={t.layer.id} className="cursor-pointer"
+             onClick={() => onOpen(t.layer.id)}>
+            <polygon points={t.points} fill={t.fill}
+                     stroke="var(--page)" strokeWidth="2" />
+            <text x={cx0} y={t.yTop + TIER_H / 2 + 4} textAnchor="middle"
+                  fontSize="12.5" fontWeight="600"
+                  fill={t.empty ? 'var(--muted)' : '#ffffff'}
+                  fontFamily="system-ui, sans-serif" pointerEvents="none">
+              {t.layer.name.split(' ')[0]} · {fmt(t.layer.recordCount)}
+            </text>
+          </g>
+        ))}
+        {/* the comparison, on the boundary that breaks it */}
+        {tiers.filter(t => t.violated && t.relation).map(t => (
+          <g key={`b-${t.layer.id}`} fontFamily="system-ui, sans-serif" fontSize="10.5"
+             fill="var(--crit-text)">
+            <line x1={cx0 + t.wBot / 2} y1={t.yBot} x2={BASE_W + 6} y2={t.yBot - 8}
+                  stroke="var(--crit-text)" strokeWidth="1" strokeDasharray="3 2" />
+            <text x={BASE_W + 10} y={t.yBot - 5}>
+              {fmt(t.layer.recordCount)} ≥ {fmt(t.relation!.lower.recordCount)}
+            </text>
+          </g>
+        ))}
+      </svg>
+
+      <div>
+        <div className={cx('text-[15px] font-semibold tracking-tight',
+                           broken.length > 0 && 'text-crit-text')}>
+          {broken.length === 0
+            ? 'The pyramid holds.'
+            : broken.length === 1
+              ? 'One layer is wider than the one below it.'
+              : `${broken.length} layers are wider than the one below them.`}
+        </div>
+        <p className="text-[12.5px] text-muted mt-1 mb-3.5 leading-relaxed">
+          Each layer should hold fewer test cases than the one below it. The shape
+          is the rule; the colour and the numbers are what your workbooks say.
+        </p>
         <div>
-          <div className="text-[12.5px] font-semibold">Automation coverage</div>
-          <div className="text-[11px] text-muted">
-            {!data ? 'Checking…'
-              : evident?.measured
-                ? `against a surveyed range of ${reference?.low}–${reference?.high}%`
-                : 'not measured — no automated-test count in the workbooks'}
-          </div>
+          {[...layers].reverse().map(layer => {
+            const relation = relationByUpperId.get(layer.id)
+            const violated = relation?.violated ?? false
+            const empty = layer.recordCount === 0
+            return (
+              <button key={layer.id} onClick={() => onOpen(layer.id)}
+                      className="w-full grid grid-cols-[10px_1fr_auto] items-center gap-2.5
+                                 py-1.5 border-b border-grid/60 last:border-0 text-left
+                                 text-[12.5px] hover:text-accent transition-colors">
+                <i className="w-2.5 h-2.5 rounded-sm shrink-0"
+                   style={{ background: violated ? 'var(--critical)'
+                     : empty ? 'var(--axis)'
+                       : `var(${layerAccentVar(layer.order, layers.length)})` }} />
+                <span className={cx(empty && 'text-muted')}>{layer.name}</span>
+                <span className={cx('tabular-nums', violated ? 'text-crit-text' : 'text-muted')}>
+                  {empty
+                    ? 'no data — not checked'
+                    : violated
+                      ? `${fmt(layer.recordCount)} — should be under ${fmt(relation!.lower.recordCount)}`
+                      : fmt(layer.recordCount)}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
-      {evident?.measured && (
-        <div>
-          <div className="text-[11px] text-muted">Evident</div>
-          <div className="text-[15px] font-semibold tabular-nums">{evident.coveragePct?.toFixed(1)}%</div>
-        </div>
-      )}
-      <ArrowRightIcon className="text-muted" />
     </Card>
   )
 }
@@ -385,7 +492,14 @@ function PathRow({ value, placeholder, canEdit, onSave }: {
   )
 }
 
-function ExcelSourceCard({ appId, release, source, canEdit, onSaved }: {
+/* Where the workbooks come from, on one line.
+
+   This was a five-line card at the top of the page: the path, a sentence about
+   how the folder is named, the change control, and the matched count. All of it
+   is setup — it matters once, when a release is first pointed at a folder, and
+   never again. So it reads as one quiet line under the title, and names the
+   workbook that is missing rather than only counting the ones that are not. */
+function SourceLine({ appId, release, source, canEdit, onSaved }: {
   appId: string
   release: ReleaseInfo | null
   source: SourceStatus | null
@@ -393,48 +507,48 @@ function ExcelSourceCard({ appId, release, source, canEdit, onSaved }: {
   onSaved: () => void
 }) {
   if (!source || !release) return null
-  const matched = source.layers.filter(l => l.files.length > 0)
+  const missing = source.layers.filter(l => l.files.length === 0)
 
   return (
-    <Card className="mt-6 p-4">
-      <div className="flex items-start gap-2.5">
-        <FolderIcon size={15} className={cx('mt-0.5 shrink-0', source.ok ? 'text-muted' : 'text-crit-text')} />
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="text-[12.5px] font-semibold">
-            Excel source — {release.name}
-          </div>
-          <p className={cx('text-[11.5px] break-all', source.ok ? 'text-muted' : 'text-crit-text')}>
-            {source.ok
-              ? source.resolvedPath
-              : source.error ?? 'No Excel root folder is configured.'}
-          </p>
-          <p className="text-[11.5px] text-muted">
-            {source.customFolder
-              ? <>Reading <code className="text-ink2">{source.folder}</code> under the Excel root.</>
-              : <>Named after the application and the release. Put this release's
-                 workbooks in <code className="text-ink2">{source.folder}</code>, one per
-                 layer — <code>regression.xlsx</code>, <code>acceptance.xlsx</code>.</>}
-          </p>
-          <PathRow
-            value={release.excelPath}
-            placeholder={`leave blank for ${source.folder}`}
-            canEdit={canEdit}
-            onSave={async next => {
-              await api.updateRelease(appId, release.id, { excelPath: next })
-              onSaved()
-            }}
-          />
-          {source.ok && (
-            <p className="text-[11.5px] text-muted">
-              {matched.length} of {source.layers.length} layers matched to a workbook
-              {source.changedCount > 0 && ` · ${source.changedCount} changed since the last refresh`}
-              {source.unmatchedFiles.length > 0 &&
-                ` · ignored: ${source.unmatchedFiles.map(f => f.relativePath).join(', ')}`}
-            </p>
-          )}
-        </div>
-      </div>
-    </Card>
+    <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11.5px] text-muted">
+      <FolderIcon size={13} className={cx('shrink-0', source.ok ? 'text-muted' : 'text-crit-text')} />
+      <span className={cx('break-all', source.ok ? 'text-ink2' : 'text-crit-text')}>
+        {source.ok ? source.resolvedPath : source.error ?? 'No Excel root folder is configured.'}
+      </span>
+      {source.ok && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span>
+            {missing.length === 0
+              ? `all ${source.layers.length} layers matched`
+              : `${source.layers.length - missing.length} of ${source.layers.length} matched — `
+                + `no ${missing.map(l => `${l.layerId}.xlsx`).join(', ')}`}
+          </span>
+        </>
+      )}
+      {source.ok && source.changedCount > 0 && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span className="text-accent">{source.changedCount} changed since the last load</span>
+        </>
+      )}
+      {source.unmatchedFiles.length > 0 && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span>ignored: {source.unmatchedFiles.map(f => f.relativePath).join(', ')}</span>
+        </>
+      )}
+      <span aria-hidden="true">·</span>
+      <PathRow
+        value={release.excelPath}
+        placeholder={`leave blank for ${source.folder}`}
+        canEdit={canEdit}
+        onSave={async next => {
+          await api.updateRelease(appId, release.id, { excelPath: next })
+          onSaved()
+        }}
+      />
+    </div>
   )
 }
 
@@ -456,7 +570,6 @@ export function LayersPage() {
   /* UPLOAD DISABLED: const [uploadFor, setUploadFor] = useState<LayerInfo | null>(null) */
   const [adding, setAdding] = useState(false)
   const [deleting, setDeleting] = useState<LayerInfo | null>(null)
-  const [summaryOpen, setSummaryOpen] = useState(false)
   const [flashId, setFlashId] = useState<string | null>(null)
   const cardRefs = useRef(new Map<string, HTMLDivElement>())
 
@@ -476,7 +589,6 @@ export function LayersPage() {
   const violations = useMemo(() => relations.filter(r => r.violated), [relations])
 
   function jumpToLayer(id: string) {
-    setSummaryOpen(true)
     cardRefs.current.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     setFlashId(id)
     window.setTimeout(() => setFlashId(f => (f === id ? null : f)), 1500)
@@ -517,84 +629,57 @@ export function LayersPage() {
         />
       )}
 
-      <ExcelSourceCard appId={appId} release={active} source={source ?? null}
-                       canEdit={hasRole('admin')} onSaved={reload} />
+      <SourceLine appId={appId} release={active} source={source ?? null}
+                  canEdit={hasRole('admin')} onSaved={reload} />
 
-      {!loading && activeId && (
-        <CoverageCard appId={appId} releaseId={activeId}
-                      layers={sortedLayers} reloadKey={reloadKey} />
-      )}
-
-      {!loading && activeId && (
-        <BenchmarkCard appId={appId} releaseId={activeId} reloadKey={reloadKey} />
-      )}
-
-      {!loading && sortedLayers.length > 1 && (
-        <Card className="mt-6 overflow-hidden">
-          <button
-            onClick={() => setSummaryOpen(o => !o)}
-            className="w-full flex items-center gap-3 px-4.5 py-3.5 text-left"
-          >
-            {violations.length === 0 ? (
-              <CheckIcon size={13} className="shrink-0 text-good-text" />
-            ) : (
-              <AlertTriangleIcon size={14} className="shrink-0 text-crit-text" />
-            )}
-            <div className="flex-1 min-w-0">
-              <div className={cx('text-[12.5px] font-semibold', violations.length === 0 ? 'text-good-text' : 'text-crit-text')}>
-                Testing Pyramid Status — {violations.length === 0
-                  ? 'Pyramid structure is healthy'
-                  : `${violations.length} violation${violations.length > 1 ? 's' : ''} found`}
+      {/* One strip, so that no single figure claims a row of its own. The
+          violation count leads because it is the only thing here that is a
+          finding rather than a reading. */}
+      {!loading && activeId && sortedLayers.length > 0 && (
+        <Card className="mt-4 flex flex-wrap items-stretch overflow-hidden divide-x divide-grid">
+          {sortedLayers.length > 1 && (
+            <button
+              onClick={() => violations.length > 0 && jumpToLayer(violations[0].upper.id)}
+              className={cx('flex items-center gap-2.5 px-4 py-2.5 text-left min-w-[230px]',
+                            violations.length > 0
+                              ? 'bg-critical/10 hover:bg-critical/15 transition-colors'
+                              : 'bg-good/5')}
+            >
+              {violations.length === 0
+                ? <CheckIcon size={14} className="shrink-0 text-good-text" />
+                : <AlertTriangleIcon size={15} className="shrink-0 text-crit-text" />}
+              <span>
+                <span className={cx('block text-[14px] font-semibold',
+                                    violations.length === 0 ? 'text-good-text' : 'text-crit-text')}>
+                  {violations.length === 0
+                    ? 'Pyramid holds'
+                    : `${violations.length} pyramid violation${violations.length > 1 ? 's' : ''}`}
+                </span>
+                <span className="block text-[11px] text-muted">
+                  {violations.length === 0
+                    ? 'every layer is smaller than the one below'
+                    : violations.map(v => v.upper.name.split(' ')[0]).join(' and ')}
+                </span>
+              </span>
+            </button>
+          )}
+          <CoverageChips appId={appId} releaseId={activeId}
+                         layers={sortedLayers} reloadKey={reloadKey} />
+          <AutomationChip appId={appId} releaseId={activeId} reloadKey={reloadKey} />
+          {source?.ok && (
+            <Chip label="Workbooks matched">
+              <div className={chipValue}>
+                {source.layers.filter(l => l.files.length > 0).length}
+                <span className="text-muted font-normal"> of {source.layers.length}</span>
               </div>
-              {/* small bottom→top connector: fewer tests expected at each step up */}
-              <div className="flex items-center flex-wrap gap-1 mt-1.5 text-[11px] text-muted">
-                {sortedLayers.map((layer, i) => (
-                  <span key={layer.id} className="flex items-center gap-1">
-                    {i > 0 && (
-                      <ChevronDownIcon
-                        size={12}
-                        className={cx(
-                          '-rotate-90 shrink-0',
-                          relationByUpperId.get(layer.id)?.violated
-                            ? 'text-crit-text'
-                            : relationByUpperId.get(layer.id)?.pending
-                              ? 'text-axis'
-                              : 'text-good-text',
-                        )}
-                      />
-                    )}
-                    <span className={cx(
-                      'font-medium',
-                      relationByUpperId.get(layer.id)?.violated && 'text-crit-text',
-                    )}>
-                      {layer.name.split(' ')[0]}
-                    </span>
-                  </span>
-                ))}
-              </div>
-            </div>
-            <ChevronDownIcon size={14} className={cx('shrink-0 text-muted transition-transform', summaryOpen && 'rotate-180')} />
-          </button>
-          {summaryOpen && (
-            <div className="border-t border-grid px-4.5 py-3 space-y-2">
-              {violations.length === 0 ? (
-                <p className="text-[12.5px] text-muted">
-                  Every layer has fewer test cases than the one below it. Unit &gt; Integration &gt; System &gt; UI/E2E.
-                </p>
-              ) : violations.map(v => (
-                <button
-                  key={v.upper.id}
-                  onClick={() => jumpToLayer(v.upper.id)}
-                  className="w-full flex items-center justify-between gap-3 text-left text-[12.5px] px-3 py-2 rounded-lg
-                             bg-critical/10 text-crit-text hover:bg-critical/15 transition-colors"
-                >
-                  <span>{v.message}</span>
-                  <ArrowRightIcon className="shrink-0" />
-                </button>
-              ))}
-            </div>
+            </Chip>
           )}
         </Card>
+      )}
+
+      {!loading && (
+        <PyramidPanel layers={sortedLayers} relationByUpperId={relationByUpperId}
+                      onOpen={jumpToLayer} />
       )}
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5 mt-6">

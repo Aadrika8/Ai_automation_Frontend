@@ -14,6 +14,7 @@ import { layerColorVar } from '../lib/palette'
 import { loadedAtLabel, monthLabel } from '../lib/period'
 import { Card, EmptyState } from './ui'
 import { ConfirmDialog } from './ConfirmDialog'
+import { WarningBadge, WarningLine } from './QualityWarnings'
 import { TrashIcon } from './icons'
 
 /** File names alone are ambiguous once two folders hold a `Regression_Test.xlsx`,
@@ -198,6 +199,14 @@ export function SnapshotHistory({ appId, releaseId, snapshots, loading,
                   </span>
                 </span>
                 <DiffLine snapshot={snapshot} />
+                {/* a problem is still true later, so it keeps its block; a
+                    notice shrinks to a count once the load is history */}
+                {snapshot.warnings?.filter(w => w.severity === 'problem')
+                  .map(w => <WarningLine key={w.code} warning={w} />)}
+                {snapshot.warnings?.some(w => w.severity === 'notice') && (
+                  <WarningBadge
+                    warnings={snapshot.warnings.filter(w => w.severity === 'notice')} />
+                )}
                 <span className="text-[11px] text-muted truncate">
                   {loadedAtLabel(snapshot.createdAt)}
                   {snapshot.createdBy && ` · by ${snapshot.createdBy}`}

@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #f9f9f7;
+      color: #0b0b0b;
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+    }
+    a { color: #2a78d6; }
+    a:hover { color: #1c5ba8; }
+  </style>
+</helmet>
+
+<div style="padding: 32px 56px; display: flex; justify-content: center;">
+  <!-- Modal: Card = bg-surface, border-hairline, rounded-xl, shadow-card, p-6, max-w-md -->
+  <div style="width: 448px; background: #fcfcfb; border: 1px solid rgba(11,11,11,0.10);
+              border-radius: 12px; padding: 24px;
+              box-shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);">
+
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">
+        Load 4.5.1 from Excel
+      </h2>
+      <span style="color: #898781; display: flex; padding: 6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+        </svg>
+      </span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <p style="margin: 0; font-size: 11.5px; color: #898781;">Sep 2026</p>
+
+      <!-- ---------- Regression: a notice, nothing lost ---------- -->
+      <div style="border: 1px solid #e1e0d9; border-radius: 8px; padding: 10px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+          <span style="font-size: 13px; font-weight: 600;">Regression_Test.xlsx</span>
+          <span style="font-size: 11px; color: #898781; flex-shrink: 0;">snapshot #4</span>
+        </div>
+        <p style="margin: 0; font-size: 11px; color: #898781;">Regression Testing</p>
+        <p style="margin: 4px 0 0; font-size: 12px; color: #52514e;">
+          206 records · 12 duplicates skipped
+        </p>
+        <p style="margin: 2px 0 0; font-size: 12px; color: #898781;">
+          3 added · 1 changed · 0 removed vs #3
+        </p>
+
+        <div style="display: flex; gap: 7px; align-items: flex-start; margin-top: 8px;">
+          <span style="color: #fab219; display: flex; flex-shrink: 0; margin-top: 1px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+            </svg>
+          </span>
+          <p style="margin: 0; font-size: 12.5px; color: #52514e; line-height: 1.45;">
+            12 rows repeat an earlier row exactly, so only the first of each was kept.
+            No figure changed.
+          </p>
+        </div>
+      </div>
+
+      <!-- ---------- Acceptance: a problem, rows lost ---------- -->
+      <div style="border: 1px solid #e1e0d9; border-radius: 8px; padding: 10px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+          <span style="font-size: 13px; font-weight: 600;">Acceptance_Test.xlsx</span>
+          <span style="font-size: 11px; color: #898781; flex-shrink: 0;">snapshot #2</span>
+        </div>
+        <p style="margin: 0; font-size: 11px; color: #898781;">Acceptance Testing</p>
+        <p style="margin: 4px 0 0; font-size: 12px; color: #52514e;">
+          38 records · 1 duplicate skipped
+        </p>
+        <p style="margin: 2px 0 0; font-size: 12px; color: #898781;">
+          0 added · 2 changed · 1 removed vs #1
+        </p>
+
+        <div style="display: flex; gap: 7px; align-items: flex-start; margin-top: 8px;
+                    background: rgba(208,59,59,0.10); border-radius: 8px; padding: 8px 10px;">
+          <span style="color: #a32626; display: flex; flex-shrink: 0; margin-top: 1px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.14h17.2a1.5 1.5 0 0 0 1.3-2.14L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+              <path d="M12 9v4" /><path d="M12 16.5h.01" />
+            </svg>
+          </span>
+          <p style="margin: 0; font-size: 12.5px; color: #52514e; line-height: 1.45;">
+            <span style="color: #a32626; font-weight: 600;">9 test cases were dropped.</span>
+            Two rows share
+            <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;">Win10&nbsp;Pro&nbsp;64bit · Version&nbsp;Update · Rahul</span>
+            but record different counts, and only the first was kept.
+          </p>
+        </div>
+      </div>
+
+      <!-- ---------- System: a problem and a grouped notice ---------- -->
+      <div style="border: 1px solid #e1e0d9; border-radius: 8px; padding: 10px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+          <span style="font-size: 13px; font-weight: 600;">System_Test.xlsx</span>
+          <span style="font-size: 11px; color: #898781; flex-shrink: 0;">snapshot #1</span>
+        </div>
+        <p style="margin: 0; font-size: 11px; color: #898781;">System Testing</p>
+        <p style="margin: 4px 0 0; font-size: 12px; color: #52514e;">9 records</p>
+        <p style="margin: 2px 0 0; font-size: 12px; color: #898781;">
+          First snapshot of this testing type.
+        </p>
+
+        <div style="display: flex; gap: 7px; align-items: flex-start; margin-top: 8px;
+                    background: rgba(208,59,59,0.10); border-radius: 8px; padding: 8px 10px;">
+          <span style="color: #a32626; display: flex; flex-shrink: 0; margin-top: 1px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.14h17.2a1.5 1.5 0 0 0 1.3-2.14L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+              <path d="M12 9v4" /><path d="M12 16.5h.01" />
+            </svg>
+          </span>
+          <p style="margin: 0; font-size: 12.5px; color: #52514e; line-height: 1.45;">
+            <span style="color: #a32626; font-weight: 600;">Pass cannot be totalled.</span>
+            One cell holds
+            <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;">“make only excel”</span>,
+            so the whole column reads as text.
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 7px; align-items: flex-start; margin-top: 6px;">
+          <span style="color: #fab219; display: flex; flex-shrink: 0; margin-top: 1px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+            </svg>
+          </span>
+          <p style="margin: 0; font-size: 12.5px; color: #52514e; line-height: 1.45;">
+            4 columns are never filled: End Date, Build, Status, Fail.
+          </p>
+        </div>
+      </div>
+
+      <button style="width: 100%; background: #2a78d6; color: #ffffff; font-weight: 600;
+                     font-size: 14px; border: none; border-radius: 8px; padding: 10px 0;
+                     cursor: pointer; font-family: inherit;">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
