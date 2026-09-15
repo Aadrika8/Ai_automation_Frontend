@@ -24,19 +24,40 @@ import {
 /* ---------- Testing Pyramid rule ----------
    Checked within one release: a release owns its own layers, so its pyramid
    is judged on its own data and never against another release's.
-   Every layer must have strictly fewer test cases than the layer directly
-   below it (Unit > Integration > System > UI/E2E). Layers are compared by
-   their `order` (bottom-first). A layer with 0 records means no data has
-   been loaded yet, so any comparison touching it is skipped rather than
-   flagged — the rule only applies once both sides have real data. */
+   Every layer must hold strictly fewer test cases than the layer directly
+   below it. Layers are compared by their `order` (bottom-first).
+
+   The figure compared is test cases wherever both layers of a pair declare
+   them — a regression row is a spec holding hundreds of cases and a feature
+   row is one feature, so rows alone say little. Where either side has no
+   test-count column the pair falls back to rows, and the message names the
+   unit and the layer responsible: setting one layer's cases against the
+   other's rows would manufacture a violation out of the units alone.
+
+   A layer with 0 records has no data yet, so any comparison touching it is
+   skipped rather than flagged. */
+type Unit = 'test cases' | 'rows'
+
 type PyramidRelation = {
   lower: LayerInfo
   upper: LayerInfo
+  /** what was compared: test cases when both sides declare them, else rows */
+  unit: Unit
+  lowerValue: number
+  upperValue: number
   /** true once both layers have data but the pyramid rule is broken */
   violated: boolean
   /** true when one side has no data yet, so the rule can't be checked */
   pending: boolean
   message: string
+}
+
+/** A layer's own headline figure: its test cases where every one of its files
+    declares them, otherwise its rows — always with the word for which. */
+function layerFigure(layer: LayerInfo): { value: number; unit: Unit } {
+  return layer.testCount != null
+    ? { value: layer.testCount, unit: 'test cases' }
+    : { value: layer.recordCount, unit: 'rows' }
 }
 
 function buildPyramidRelations(layers: LayerInfo[]): PyramidRelation[] {
@@ -45,14 +66,18 @@ function buildPyramidRelations(layers: LayerInfo[]): PyramidRelation[] {
   for (let i = 1; i < sorted.length; i++) {
     const lower = sorted[i - 1]
     const upper = sorted[i]
+    const byTests = lower.testCount != null && upper.testCount != null
+    const unit: Unit = byTests ? 'test cases' : 'rows'
+    const lowerValue = byTests ? lower.testCount! : lower.recordCount
+    const upperValue = byTests ? upper.testCount! : upper.recordCount
     const pending = lower.recordCount === 0 || upper.recordCount === 0
-    const violated = !pending && upper.recordCount >= lower.recordCount
+    const violated = !pending && upperValue >= lowerValue
+    const uncounted = [lower, upper].filter(l => l.testCount == null).map(l => l.name)
+    const why = byTests ? ''
+      : ` Compared by rows: ${uncounted.join(' and ')} ${uncounted.length > 1 ? 'have' : 'has'} no test-count column.`
     relations.push({
-      lower,
-      upper,
-      violated,
-      pending,
-      message: `${upper.name} (${fmt(upper.recordCount)}) should have fewer test cases than ${lower.name} (${fmt(lower.recordCount)}).`,
+      lower, upper, unit, lowerValue, upperValue, violated, pending,
+      message: `${upper.name} (${fmt(upperValue)} ${unit}) should have fewer ${unit} than ${lower.name} (${fmt(lowerValue)}).${why}`,
     })
   }
   return relations
@@ -108,7 +133,7 @@ function PyramidPositionPicker({ layers, value, onChange, newName }: {
           <i className="w-1.5 h-4 rounded-full shrink-0"
              style={{ background: `var(${layerAccentVar(slot - 1, layers.length)})` }} />
           <span className="text-[12px] font-medium truncate">{layer.name}</span>
-          <span className="ml-auto shrink-0 text-[11px] text-muted">{fmt(layer.recordCount)} records</span>
+          <span className="ml-auto shrink-0 text-[11px] text-muted">{fmt(layerFigure(layer).value)} {layerFigure(layer).unit}</span>
         </div>,
       )
     }
@@ -252,8 +277,11 @@ function Chip({ label, children, onClick, ariaLabel }: {
 
 const chipValue = 'text-[17px] font-semibold tracking-tight tabular-nums'
 
-/** Feature ↔ System, as two figures. Absent when the release has no such pair. */
-function CoverageChips({ appId, releaseId, layers, reloadKey }: {
+/** Traceability between testing types, as one entry. Feature ↔ System is the
+    only pair today; its two directions share one chip because they are one
+    comparison read both ways, and a single click opens the page that holds
+    every pair. Absent when the release has no pair to compare. */
+function TraceabilityChip({ appId, releaseId, layers, reloadKey }: {
   appId: string
   releaseId: string
   layers: LayerInfo[]
@@ -269,24 +297,21 @@ function CoverageChips({ appId, releaseId, layers, reloadKey }: {
 
   const summary = data?.summary
   const blocked = data?.errorCode ? data.error : null
-  const go = () => navigate(withRelease(`/apps/${appId}/coverage`, releaseId))
+  const go = () => navigate(withRelease(`/apps/${appId}/traceability`, releaseId))
 
-  if (blocked || !summary) {
-    return (
-      <Chip label="Feature ↔ System" onClick={go} ariaLabel="Feature to System coverage">
-        <div className="text-[13px] text-muted pt-0.5">{blocked ?? 'Checking…'}</div>
-      </Chip>
-    )
-  }
   return (
-    <>
-      <Chip label="Feature → System" onClick={go} ariaLabel="Feature to System coverage">
-        <div className={chipValue}>{summary.forwardCoveragePct.toFixed(1)}%</div>
-      </Chip>
-      <Chip label="System → Feature" onClick={go} ariaLabel="System to Feature coverage">
-        <div className={chipValue}>{summary.backwardCoveragePct.toFixed(1)}%</div>
-      </Chip>
-    </>
+    <Chip label="Traceability" onClick={go} ariaLabel="Traceability between testing types">
+      {blocked || !summary
+        ? <div className="text-[13px] text-muted pt-0.5">{blocked ?? 'Checking…'}</div>
+        : <>
+            <div className={chipValue}>
+              {summary.forwardCoveragePct.toFixed(1)}%
+              <span className="text-muted font-normal mx-1.5">·</span>
+              {summary.backwardCoveragePct.toFixed(1)}%
+            </div>
+            <div className="text-[11px] text-muted">Feature → System · System → Feature</div>
+          </>}
+    </Chip>
   )
 }
 
@@ -366,7 +391,7 @@ function PyramidPanel({ layers, relationByUpperId, onOpen }: {
 
   return (
     <Card className="mt-4 p-5 grid gap-8 lg:grid-cols-[minmax(0,440px)_1fr] items-center">
-      <svg viewBox={`-8 -8 ${BASE_W + 120} ${height + 16}`} className="w-full h-auto"
+      <svg viewBox={`-8 -8 ${BASE_W + 150} ${height + 16}`} className="w-full h-auto"
            role="img"
            aria-label={broken.length === 0
              ? 'Testing pyramid: every layer holds fewer test cases than the one below it.'
@@ -380,8 +405,15 @@ function PyramidPanel({ layers, relationByUpperId, onOpen }: {
                   fontSize="12.5" fontWeight="600"
                   fill={t.empty ? 'var(--muted)' : '#ffffff'}
                   fontFamily="system-ui, sans-serif" pointerEvents="none">
-              {t.layer.name.split(' ')[0]} · {fmt(t.layer.recordCount)}
+              {t.layer.name.split(' ')[0]} · {fmt(layerFigure(t.layer).value)}
             </text>
+            {!t.empty && (
+              <text x={cx0} y={t.yTop + TIER_H / 2 + 17} textAnchor="middle"
+                    fontSize="9.5" fill="#ffffff" fillOpacity="0.8"
+                    fontFamily="system-ui, sans-serif" pointerEvents="none">
+                {layerFigure(t.layer).unit}
+              </text>
+            )}
           </g>
         ))}
         {/* the comparison, on the boundary that breaks it */}
@@ -391,7 +423,7 @@ function PyramidPanel({ layers, relationByUpperId, onOpen }: {
             <line x1={cx0 + t.wBot / 2} y1={t.yBot} x2={BASE_W + 6} y2={t.yBot - 8}
                   stroke="var(--crit-text)" strokeWidth="1" strokeDasharray="3 2" />
             <text x={BASE_W + 10} y={t.yBot - 5}>
-              {fmt(t.layer.recordCount)} ≥ {fmt(t.relation!.lower.recordCount)}
+              {fmt(t.relation!.upperValue)} ≥ {fmt(t.relation!.lowerValue)} {t.relation!.unit === 'test cases' ? 'tests' : 'rows'}
             </text>
           </g>
         ))}
@@ -407,8 +439,9 @@ function PyramidPanel({ layers, relationByUpperId, onOpen }: {
               : `${broken.length} layers are wider than the one below them.`}
         </div>
         <p className="text-[12.5px] text-muted mt-1 mb-3.5 leading-relaxed">
-          Each layer should hold fewer test cases than the one below it. The shape
-          is the rule; the colour and the numbers are what your workbooks say.
+          Each layer should hold fewer test cases than the one below it. Where
+          both layers of a pair declare a test count, that is what is compared;
+          where either has none, rows are — and every figure says which.
         </p>
         <div>
           {[...layers].reverse().map(layer => {
@@ -429,8 +462,8 @@ function PyramidPanel({ layers, relationByUpperId, onOpen }: {
                   {empty
                     ? 'no data — not checked'
                     : violated
-                      ? `${fmt(layer.recordCount)} — should be under ${fmt(relation!.lower.recordCount)}`
-                      : fmt(layer.recordCount)}
+                      ? `${fmt(relation!.upperValue)} ${relation!.unit} — should be under ${fmt(relation!.lowerValue)}`
+                      : `${fmt(layerFigure(layer).value)} ${layerFigure(layer).unit}`}
                 </span>
               </button>
             )
@@ -663,7 +696,7 @@ export function LayersPage() {
               </span>
             </button>
           )}
-          <CoverageChips appId={appId} releaseId={activeId}
+          <TraceabilityChip appId={appId} releaseId={activeId}
                          layers={sortedLayers} reloadKey={reloadKey} />
           <AutomationChip appId={appId} releaseId={activeId} reloadKey={reloadKey} />
           {source?.ok && (
@@ -727,9 +760,11 @@ export function LayersPage() {
               <div className="flex items-center justify-between border-t border-grid pt-3 text-xs text-muted">
                 <div>
                   <b className={cx('block text-base font-semibold', violated ? 'text-crit-text' : 'text-ink')}>
-                    {fmt(layer.recordCount)}
+                    {fmt(layerFigure(layer).value)}
                   </b>
-                  records
+                  {layer.testCount != null
+                    ? `test cases · ${fmt(layer.recordCount)} rows`
+                    : 'rows'}
                 </div>
                 <div className="text-right">
                   {layer.latestSnapshotAt
@@ -763,7 +798,7 @@ export function LayersPage() {
               {relation && !relation.violated && !relation.pending && (
                 <div className="flex items-center gap-1.5 text-[11.5px] text-good-text">
                   <CheckIcon size={10} className="shrink-0" />
-                  Fewer test cases than {relation.lower.name} — pyramid rule followed
+                  Fewer {relation.unit} than {relation.lower.name} — pyramid rule followed
                 </div>
               )}
               {relation && relation.pending && (

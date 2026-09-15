@@ -656,11 +656,6 @@ function DashboardView({ dash, loading, order, onDimension }: {
           </div>
         </Card>
       )}
-
-      <EmptyState
-        title="Run results not connected yet"
-        hint="Pass rates, failure trends and run history will appear here once test-run results are ingested alongside the spec counts."
-      />
     </div>
   )
 }
