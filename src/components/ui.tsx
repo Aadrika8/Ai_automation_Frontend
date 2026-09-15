@@ -1,25 +1,42 @@
-/* Small shared building blocks: Card, KpiTile, StatusChip, Meter,
-   Breadcrumbs, Segmented, EmptyState, Skeleton. */
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+/* Small shared building blocks: Card, KpiTile, Breadcrumbs, Segmented,
+   EmptyState, Skeleton, PageTitle. */
+import {
+  forwardRef, useEffect, useRef, useState,
+  type CSSProperties, type KeyboardEvent, type ReactNode,
+} from 'react'
 import { Link } from 'react-router-dom'
 import { cx, fmt } from '../lib/format'
-import { CheckIcon, ChevronRightIcon, CrossIcon, SpinnerIcon } from './icons'
-import type { RunStatus, TestStatus } from '../api'
 
-export function Card({ className, children, onClick }: {
+export const Card = forwardRef<HTMLDivElement, {
   className?: string
   children: ReactNode
   onClick?: () => void
-}) {
+  style?: CSSProperties
+  /* A card that acts as a control needs to say so and be reachable by
+     keyboard; a plain one passes none of this and stays a plain div. */
+  role?: string
+  tabIndex?: number
+  ariaLabel?: string
+  ariaCurrent?: boolean
+  onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void
+}>(function Card({ className, children, onClick, style, role, tabIndex,
+                   ariaLabel, ariaCurrent, onKeyDown }, ref) {
   return (
     <div
+      ref={ref}
       onClick={onClick}
+      onKeyDown={onKeyDown}
+      style={style}
+      role={role}
+      tabIndex={tabIndex}
+      aria-label={ariaLabel}
+      aria-current={ariaCurrent ? 'true' : undefined}
       className={cx('bg-surface border border-hairline rounded-xl shadow-card', className)}
     >
       {children}
     </div>
   )
-}
+})
 
 const reducedMotion = () =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -54,36 +71,6 @@ export function KpiTile({ label, value, sub, suffix = '' }: {
       <div className="text-[27px] font-semibold tracking-tight mt-0.5">{shown}{suffix}</div>
       {sub && <div className="text-[11.5px] text-muted mt-0.5 flex items-center gap-1.5">{sub}</div>}
     </Card>
-  )
-}
-
-const RUN_CHIP: Record<RunStatus, { cls: string; icon: ReactNode }> = {
-  Completed: { cls: 'text-good-text bg-good/10', icon: <CheckIcon /> },
-  Failed: { cls: 'text-crit-text bg-critical/10', icon: <CrossIcon /> },
-  Running: { cls: 'text-accent bg-accent-soft', icon: <SpinnerIcon className="animate-spin" /> },
-}
-const TEST_CHIP: Record<TestStatus, { cls: string; icon: ReactNode }> = {
-  Passed: RUN_CHIP.Completed,
-  Failed: RUN_CHIP.Failed,
-  Running: RUN_CHIP.Running,
-  Skipped: { cls: 'text-muted bg-muted/10', icon: <ChevronRightIcon size={11} /> },
-}
-
-export function StatusChip({ status }: { status: RunStatus | TestStatus }) {
-  const spec = (RUN_CHIP as Record<string, { cls: string; icon: ReactNode }>)[status] ?? TEST_CHIP[status as TestStatus]
-  return (
-    <span className={cx('inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full', spec.cls)}>
-      {spec.icon}{status}
-    </span>
-  )
-}
-
-export function Meter({ pct, className }: { pct: number; className?: string }) {
-  const color = pct >= 90 ? 'var(--good)' : pct >= 75 ? 'var(--warning)' : 'var(--critical)'
-  return (
-    <span className={cx('inline-block h-1.5 w-28 rounded-full bg-accent-soft overflow-hidden align-middle', className)}>
-      <i className="block h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
-    </span>
   )
 }
 

@@ -1,0 +1,91 @@
+{
+  "artboards": [
+    {
+      "file": "OptionA.dc.html",
+      "title": "Option A \u2014 Status bar",
+      "x": 0,
+      "y": 0,
+      "w": 1240,
+      "h": 820
+    },
+    {
+      "file": "Main.dc.html",
+      "title": "Option B \u2014 Layers first",
+      "x": 1340,
+      "y": 0,
+      "w": 1240,
+      "h": 900
+    },
+    {
+      "file": "OptionC.dc.html",
+      "title": "Option C \u2014 Draw the pyramid",
+      "x": 2680,
+      "y": 0,
+      "w": 1240,
+      "h": 820
+    },
+    {
+      "file": "OptionD1.dc.html",
+      "title": "Option D \u2014 Strip + pyramid  (new)",
+      "x": 0,
+      "y": 1360,
+      "w": 1240,
+      "h": 1000
+    },
+    {
+      "file": "OptionD2.dc.html",
+      "title": "D alternative \u2014 true widths",
+      "x": 1340,
+      "y": 1360,
+      "w": 1240,
+      "h": 700
+    }
+  ],
+  "annotations": [
+    {
+      "id": "problem",
+      "x": 0,
+      "y": -190,
+      "w": 1240,
+      "text": "The problem today\n\nFour full-width banners of equal weight before any content. The Excel path (setup, matters once) shouts as loudly as \u201c2 pyramid violations\u201d (a finding, matters now) \u2014 and the violations sit fourth. The first layer card is ~500px down, below the fold."
+    },
+    {
+      "id": "axis-a",
+      "x": 0,
+      "y": 880,
+      "w": 560,
+      "text": "AXIS: compress, don't rethink.\n\nFour banners become one strip of chips; the source drops to a line. Layers rise ~330px.\n\n+ smallest change, nothing moves conceptually\n\u2212 still a header to read before the subject\n\u2212 \u201cnot measured\u201d still takes a slot to say nothing"
+    },
+    {
+      "id": "axis-b",
+      "x": 1340,
+      "y": 960,
+      "w": 560,
+      "text": "AXIS: put findings on the things they are about.\n\nThe page is called Testing Layers, so it opens with layers. A violation is about System and Acceptance, so it lives on those two cards \u2014 where the red border already was. Unit says its own workbook is missing.\n\n+ no banner duplicates what a card already shows\n+ subject is above the fold\n\u2212 you must scan the grid to count violations"
+    },
+    {
+      "id": "axis-c",
+      "x": 2680,
+      "y": 880,
+      "w": 560,
+      "text": "AXIS: the rule is about size, so draw size.\n\nOne panel, bars by record count, each row a link. \u201cAcceptance is wider than System\u201d is seen, not read.\n\n+ the strongest at-a-glance read\n\u2212 Regression (210) dwarfs everything, so 15 vs 13 is invisible in the bars and only the numbers carry it\n\u2212 two ways to open a layer on one page"
+    },
+    {
+      "id": "axis-d",
+      "x": 0,
+      "y": 2400,
+      "w": 1240,
+      "text": "AXIS: keep the strip, add the shape.\n\nOption A's chip row stays exactly as it is. Under it the pyramid is drawn to its IDEAL geometry \u2014 the trapezoids are the rule, not the data \u2014 with each tier carrying its real count and the two broken boundaries labelled 39 \u2265 15 and 15 \u2265 13. Unit is grey because 0 records means the rule cannot be checked, not that it passed.\n\n+ the strip answers \u201cwhat is wrong\u201d and the shape answers \u201cwhere\u201d\n+ legible at any set of numbers, unlike true-scale widths\n\u2212 a reader could mistake the ideal shape for the data, which is why every tier is labelled"
+    },
+    {
+      "id": "axis-d2",
+      "x": 1340,
+      "y": 2100,
+      "w": 1240,
+      "text": "The alternative, for comparison: widths taken from the real counts. Truthful, and nearly unreadable \u2014 Regression is 210 of 277 records, so everything above it is a sliver and the 15-vs-13 violation is two pixels wide."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

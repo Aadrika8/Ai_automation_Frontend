@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #0d0d0d;
+      color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+    }
+    a { color: #3987e5; } a:hover { color: #5ba3f0; }
+    .card { background: #1a1a19; border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 12px; }
+    .layer { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .layer h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+    .layer .sub { font-size: 11px; color: #898781; }
+    .layer p { margin: 0; font-size: 12.5px; color: #c3c2b7; flex: 1; }
+    .foot { display: flex; justify-content: space-between; align-items: flex-end;
+            border-top: 1px solid #2c2c2a; padding-top: 12px; font-size: 12px;
+            color: #898781; }
+    .foot b { display: block; font-size: 16px; font-weight: 600; color: #ffffff; }
+    .flag { display: flex; align-items: flex-start; gap: 7px; font-size: 12px;
+            line-height: 1.4; border-radius: 8px; padding: 7px 9px; }
+  </style>
+</helmet>
+
+<div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 16px;">
+
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+    <div>
+      <h1 style="margin: 0 0 5px; font-size: 23px; font-weight: 600; letter-spacing: -0.02em;">
+        Cellsens — Testing Layers
+      </h1>
+      <div style="display: flex; align-items: center; gap: 9px; font-size: 12px; color: #898781;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+        </svg>
+        <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;">D:\New folder\CellSens\4.5.1</span>
+        <span>·</span><span>4 of 5 layers matched</span>
+        <span>·</span><a href="#" style="text-decoration: none;">Change folder</a>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+      <div class="card" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px;">
+        <span style="font-size: 10.5px; letter-spacing: 0.06em; color: #898781;">RELEASE</span>
+        <span style="font-weight: 600;">4.5.1</span>
+        <span style="font-size: 10px; color: #0ca30c; background: rgba(12,163,12,0.12);
+                     border-radius: 4px; padding: 2px 6px;">current</span>
+      </div>
+      <button style="background: #3987e5; color: #fff; border: none; border-radius: 8px;
+                     padding: 8px 14px; font-size: 13px; font-weight: 600;
+                     font-family: inherit; cursor: pointer;">Load from Excel</button>
+      <button style="background: none; color: #c3c2b7; border: 1px solid #2c2c2a;
+                     border-radius: 8px; padding: 8px 14px; font-size: 13px;
+                     font-weight: 600; font-family: inherit; cursor: pointer;">+ Add layer</button>
+    </div>
+  </div>
+
+  <!-- the layers are the page. Nothing stands in front of them. -->
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;">
+
+    <div class="card layer" style="opacity: 0.72;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i style="width: 10px; height: 32px; border-radius: 999px; background: #383835;"></i>
+        <div style="flex: 1;"><h2>Unit Testing</h2><div class="sub">Unit</div></div>
+      </div>
+      <p>Isolated checks of individual functions and components</p>
+      <div class="flag" style="background: rgba(137,135,129,0.12); color: #898781;">
+        <span style="flex-shrink: 0; margin-top: 1px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+          </svg>
+        </span>
+        <span>No <b style="color: #c3c2b7; font-weight: 600;">unit.xlsx</b> in the release folder.</span>
+      </div>
+      <div class="foot"><div><b>0</b>records</div><div style="text-align: right;">never loaded</div></div>
+    </div>
+
+    <div class="card layer">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i style="width: 10px; height: 32px; border-radius: 999px; background: #2163b6;"></i>
+        <div style="flex: 1;"><h2>Regression Testing</h2><div class="sub">Regression</div></div>
+      </div>
+      <p>Full re-verification of previously shipped behaviour</p>
+      <div class="foot"><div><b>210</b>records</div>
+        <div style="text-align: right;"><b>Sep 2026</b>2 files · 2 loads</div></div>
+    </div>
+
+    <div class="card layer">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i style="width: 10px; height: 32px; border-radius: 999px; background: #2a78d6;"></i>
+        <div style="flex: 1;"><h2>Feature Testing</h2><div class="sub">Feature</div></div>
+      </div>
+      <p>Focused verification of new and changed features</p>
+      <div class="foot"><div><b>13</b>records</div>
+        <div style="text-align: right;"><b>Sep 2026</b>1 file · 1 load</div></div>
+    </div>
+
+    <!-- the violation lives on the layer it is about, not in a banner -->
+    <div class="card layer" style="border-color: #d03b3b; box-shadow: inset 0 0 0 1px #d03b3b;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i style="width: 10px; height: 32px; border-radius: 999px; background: #d03b3b;"></i>
+        <div style="flex: 1;"><h2>System Testing</h2><div class="sub">System</div></div>
+      </div>
+      <p>Complete builds validated end to end</p>
+      <div class="flag" style="background: rgba(208,59,59,0.12);">
+        <span style="color: #e66767; flex-shrink: 0; margin-top: 1px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.14h17.2a1.5 1.5 0 0 0 1.3-2.14L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+            <path d="M12 9v4" /><path d="M12 16.5h.01" />
+          </svg>
+        </span>
+        <span style="color: #c3c2b7;">
+          <b style="color: #e66767; font-weight: 600;">15 records, but Feature has 13.</b>
+          A layer should hold fewer test cases than the one below it.
+        </span>
+      </div>
+      <div class="foot"><div><b style="color: #e66767;">15</b>records</div>
+        <div style="text-align: right;"><b>Sep 2026</b>1 file · 1 load</div></div>
+    </div>
+
+    <div class="card layer" style="border-color: #d03b3b; box-shadow: inset 0 0 0 1px #d03b3b;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i style="width: 10px; height: 32px; border-radius: 999px; background: #d03b3b;"></i>
+        <div style="flex: 1;"><h2>Acceptance Testing</h2><div class="sub">Acceptance</div></div>
+      </div>
+      <p>Customer-facing acceptance criteria and sign-off</p>
+      <div class="flag" style="background: rgba(208,59,59,0.12);">
+        <span style="color: #e66767; flex-shrink: 0; margin-top: 1px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.14h17.2a1.5 1.5 0 0 0 1.3-2.14L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+            <path d="M12 9v4" /><path d="M12 16.5h.01" />
+          </svg>
+        </span>
+        <span style="color: #c3c2b7;">
+          <b style="color: #e66767; font-weight: 600;">39 records, but System has 15.</b>
+          A layer should hold fewer test cases than the one below it.
+        </span>
+      </div>
+      <div class="foot"><div><b style="color: #e66767;">39</b>records</div>
+        <div style="text-align: right;"><b>Sep 2026</b>1 file · 1 load</div></div>
+    </div>
+
+    <!-- the two cross-layer reports are destinations, so they sit with the grid -->
+    <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;
+                             background: #141413;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+        <div>
+          <div style="font-size: 13px; font-weight: 600;">Feature ↔ System coverage</div>
+          <div style="font-size: 11px; color: #898781;">8 gaps across both directions</div>
+        </div>
+        <span style="color: #898781;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+          </svg>
+        </span>
+      </div>
+      <div style="display: flex; gap: 22px;">
+        <div><div style="font-size: 11px; color: #898781;">Feature → System</div>
+             <div style="font-size: 17px; font-weight: 600;">53.8%</div></div>
+        <div><div style="font-size: 11px; color: #898781;">System → Feature</div>
+             <div style="font-size: 17px; font-weight: 600;">77.8%</div></div>
+      </div>
+      <div style="height: 1px; background: #2c2c2a;"></div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+        <div>
+          <div style="font-size: 13px; font-weight: 600;">Automation coverage</div>
+          <div style="font-size: 11px; color: #898781;">not measured — no automated-test count</div>
+        </div>
+        <span style="color: #898781;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+          </svg>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

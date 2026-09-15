@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #f9f9f7;
+      color: #0b0b0b;
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+    }
+    a { color: #2a78d6; }
+    a:hover { color: #1c5ba8; }
+  </style>
+</helmet>
+
+<div style="padding: 32px 40px; display: flex; flex-direction: column; gap: 20px;">
+
+  <!-- the strip sits above the dashboard, never in place of it -->
+  <div style="background: rgba(208,59,59,0.10); border-radius: 8px; padding: 12px 14px;
+              display: flex; align-items: flex-start; gap: 10px;">
+    <span style="color: #a32626; display: flex; flex-shrink: 0; margin-top: 1px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m10.29 3.86-8.18 14.14A1.5 1.5 0 0 0 3.4 20.14h17.2a1.5 1.5 0 0 0 1.3-2.14L13.71 3.86a1.5 1.5 0 0 0-2.6 0Z" />
+        <path d="M12 9v4" /><path d="M12 16.5h.01" />
+      </svg>
+    </span>
+    <div style="display: flex; flex-direction: column; gap: 3px; flex: 1;">
+      <span style="font-size: 12.5px; color: #52514e; line-height: 1.45;">
+        <span style="color: #a32626; font-weight: 600;">This sheet lost 9 test cases when it was read.</span>
+        Two rows share
+        <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;">Win10&nbsp;Pro&nbsp;64bit · Version&nbsp;Update · Rahul</span>
+        but record different counts, so only the first was kept. The figures below are
+        taken from what was kept.
+      </span>
+      <span style="font-size: 12px; color: #898781;">
+        Read from Acceptance_Test.xlsx · snapshot #2 · Sep 2026
+      </span>
+    </div>
+    <span style="font-size: 12px; color: #2a78d6; font-weight: 600; flex-shrink: 0;
+                 white-space: nowrap; cursor: pointer;">View the rows</span>
+  </div>
+
+  <!-- the dashboard carries on underneath, unblocked -->
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+    <div style="background: #fcfcfb; border: 1px solid rgba(11,11,11,0.10); border-radius: 12px;
+                padding: 16px 18px; box-shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);">
+      <div style="font-size: 12px; color: #52514e;">Pass rate</div>
+      <div style="font-size: 27px; font-weight: 600; letter-spacing: -0.02em; margin-top: 2px;
+                  color: #006300;">97.3%</div>
+      <div style="font-size: 11.5px; color: #898781; margin-top: 2px;">of 1,386 executed</div>
+    </div>
+    <div style="background: #fcfcfb; border: 1px solid rgba(11,11,11,0.10); border-radius: 12px;
+                padding: 16px 18px; box-shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);">
+      <div style="font-size: 12px; color: #52514e;">Passed</div>
+      <div style="font-size: 27px; font-weight: 600; letter-spacing: -0.02em; margin-top: 2px;
+                  font-variant-numeric: tabular-nums;">1,349</div>
+    </div>
+    <div style="background: #fcfcfb; border: 1px solid rgba(11,11,11,0.10); border-radius: 12px;
+                padding: 16px 18px; box-shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);">
+      <div style="font-size: 12px; color: #52514e;">Failed</div>
+      <div style="font-size: 27px; font-weight: 600; letter-spacing: -0.02em; margin-top: 2px;
+                  font-variant-numeric: tabular-nums;">37</div>
+      <div style="font-size: 11.5px; color: #898781; margin-top: 2px;">from Fail</div>
+    </div>
+    <div style="background: #fcfcfb; border: 1px solid rgba(11,11,11,0.10); border-radius: 12px;
+                padding: 16px 18px; box-shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);">
+      <div style="font-size: 12px; color: #52514e;">Not run</div>
+      <div style="font-size: 27px; font-weight: 600; letter-spacing: -0.02em; margin-top: 2px;
+                  font-variant-numeric: tabular-nums;">26</div>
+      <div style="font-size: 11.5px; color: #898781; margin-top: 2px;">from NA</div>
+    </div>
+  </div>
+
+  <!-- a layer whose only issue is a notice gets the quieter form -->
+  <div style="display: flex; align-items: flex-start; gap: 9px; padding: 2px 2px 0;">
+    <span style="color: #fab219; display: flex; flex-shrink: 0; margin-top: 1px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+      </svg>
+    </span>
+    <span style="font-size: 12.5px; color: #52514e; line-height: 1.45;">
+      4 columns in this sheet are never filled: End Date, Build, Status, Fail.
+      <span style="color: #898781;">Nothing is missing from the figures above.</span>
+    </span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
