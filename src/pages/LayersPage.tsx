@@ -637,6 +637,12 @@ export function LayersPage() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <ReleaseSwitcher appId={appId} releases={releases} active={active}
                            onSelect={select} onChanged={reload} />
+          {activeId && (
+            <button onClick={() => navigate(withRelease(`/apps/${appId}/report`, activeId))}
+                    className="flex items-center gap-1.5 text-[13px] font-semibold rounded-lg px-3.5 py-2 border border-grid text-ink2 hover:border-accent hover:text-accent transition-colors">
+              QA report
+            </button>
+          )}
           {hasRole('qa') && activeId && (
             <button onClick={() => setSyncAll(true)}
                     className="flex items-center gap-1.5 text-[13px] font-semibold bg-accent text-white rounded-lg px-3.5 py-2 hover:brightness-110 transition">
