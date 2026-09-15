@@ -28,6 +28,8 @@
   --warning: #fab219;
   --good-text: #006300;
   --crit-text: #a32626;
+  /* amber as text: --warning is an icon colour, too faint to read on light */
+  --warn-text: #8a5d00;
   --shadow: 0 1px 2px rgba(11, 11, 11, 0.05), 0 4px 16px rgba(11, 11, 11, 0.06);
   --shadow-lift: 0 2px 4px rgba(11, 11, 11, 0.06), 0 12px 28px rgba(11, 11, 11, 0.12);
 }
@@ -44,6 +46,7 @@
   --accent-soft: rgba(57, 135, 229, 0.14);
   --good-text: #0ca30c;
   --crit-text: #e66767;
+  --warn-text: #fab219;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.35);
   --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 12px 28px rgba(0, 0, 0, 0.5);
 }
@@ -65,6 +68,7 @@
   --color-warning: var(--warning);
   --color-good-text: var(--good-text);
   --color-crit-text: var(--crit-text);
+  --color-warn-text: var(--warn-text);
   --shadow-card: var(--shadow);
   --shadow-lift: var(--shadow-lift);
   --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;

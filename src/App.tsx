@@ -24,6 +24,8 @@ export default function App() {
               <Route path="/apps" element={<ApplicationsPage />} />
               <Route path="/apps/:appId" element={<LayersPage />} />
               <Route path="/apps/:appId/layers/:layerId" element={<LayerPage />} />
+              <Route path="/apps/:appId/traceability" element={<CoveragePage />} />
+              {/* the page’s earlier address, kept so old links still open it */}
               <Route path="/apps/:appId/coverage" element={<CoveragePage />} />
               <Route path="/apps/:appId/benchmark" element={<BenchmarkPage />} />
 

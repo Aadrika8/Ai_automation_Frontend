@@ -8,8 +8,10 @@
    That asymmetry is the point rather than a shortcut: a sheet nobody finished
    emits four or five notices, and five tinted blocks is a wall people stop
    reading. Only the ones that cost something are allowed to shout. */
+import type { ReactNode } from 'react'
 import type { QualityWarning } from '../api'
 import { AlertTriangleIcon, InfoIcon } from './icons'
+import { warningLabel } from '../lib/warnings'
 
 export function WarningLine({ warning }: { warning: QualityWarning }) {
   const problem = warning.severity === 'problem'
@@ -38,6 +40,33 @@ export function QualityWarnings({ warnings, className = '' }: {
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {warnings.map(w => <WarningLine key={w.code} warning={w} />)}
     </div>
+  )
+}
+
+/** One finding with its name as the title — red edge for a problem, amber
+    for a notice. Used where the name is also shown on a pill above it. */
+export function Callout({ problem, title, children }: {
+  problem: boolean
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <div className={problem
+      ? 'mt-2 border-l-[3px] border-critical bg-critical/10 rounded-r-lg px-2.5 py-2 text-[12.5px] leading-snug text-ink2'
+      : 'mt-2 border-l-[3px] border-warning bg-warning/10 rounded-r-lg px-2.5 py-2 text-[12.5px] leading-snug text-ink2'}>
+      <b className={problem ? 'font-semibold text-crit-text' : 'font-semibold text-warn-text'}>
+        {title} —{' '}
+      </b>
+      {children}
+    </div>
+  )
+}
+
+export function WarningCallout({ warning }: { warning: QualityWarning }) {
+  return (
+    <Callout problem={warning.severity === 'problem'} title={warningLabel(warning.code)}>
+      {warning.message}
+    </Callout>
   )
 }
 

@@ -254,6 +254,9 @@ export interface LayerInfo {
   /** rows held now, summed across this type's files — for the testing
       pyramid only; no combined dataset exists */
   recordCount: number
+  /** test cases held now, from each file's total-test-count column; null
+      when any of this type's files has none, so it is never a partial sum */
+  testCount: number | null
   fileCount: number
   snapshotCount: number
   latestSnapshotAt: string | null
@@ -461,15 +464,8 @@ export interface LayerDashboardResponse {
 }
 
 export interface AppSettings {
-  /** parent folder holding one sub-folder per application */
+  /** parent folder holding one sub-folder per application — the only setting */
   excelRoot: string
-  repoUrl: string
-  branch: string
-  cacheDir: string
-  timeoutSeconds: number
-  rootFolder: string
-  levels: string[]
-  extensions: string[]
 }
 
 export interface ManagedUser {
@@ -639,6 +635,31 @@ export interface CoverageWarning {
   message: string
 }
 
+/** A feature row naming a feature id its own workbook does not list. Read
+    from the row's text and never matched on, so it moves no coverage figure. */
+export interface OutsideReference {
+  /** the row's own id */
+  id: string
+  /** the id its text names */
+  names: string
+  /** the cell it is named in */
+  text: string
+  fileName: string
+}
+
+/** A feature row whose text names another row of the same workbook. The
+    row is matched on its own id; if that is the stale half, the match belongs
+    to the id its text names. */
+export interface IdMismatch {
+  /** the row's own id — the one it is matched on */
+  id: string
+  /** the other row's id, named in its text */
+  names: string
+  /** the cell it is named in */
+  text: string
+  fileName: string
+}
+
 export interface CoverageResponse {
   configured: boolean
   /** set when the comparison could not run — an unloaded layer, say, or a
@@ -651,6 +672,10 @@ export interface CoverageResponse {
   summary: CoverageSummary
   entries: CoverageEntry[]
   warnings: CoverageWarning[]
+  /** feature rows naming a feature id their workbook does not list */
+  outsideReferences: OutsideReference[]
+  /** feature rows whose text names another row of the same workbook */
+  idMismatches: IdMismatch[]
 }
 
 /* --- benchmark: automation coverage ------------------------------------ */

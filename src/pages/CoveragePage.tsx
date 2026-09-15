@@ -37,7 +37,7 @@ import {
   AlertTriangleIcon, SearchIcon, SlidersIcon,
 } from '../components/icons'
 
-type Tab = 'missing_in_system' | 'missing_in_feature' | 'covered' | 'quality'
+type Tab = 'missing_in_system' | 'missing_in_feature' | 'covered' | 'outside' | 'quality'
 
 const STATUS_LABEL: Record<CoverageStatus, string> = {
   covered: 'Covered',
@@ -50,6 +50,7 @@ const TABS: Array<{ key: Tab; label: string }> = [
   { key: 'missing_in_system', label: STATUS_LABEL.missing_in_system },
   { key: 'missing_in_feature', label: STATUS_LABEL.missing_in_feature },
   { key: 'covered', label: STATUS_LABEL.covered },
+  { key: 'outside', label: 'Outside references' },
   { key: 'quality', label: 'Data quality' },
 ]
 
@@ -285,6 +286,12 @@ export function CoveragePage() {
   // a fresh [] each render would defeat the memos below
   const entries = useMemo(() => data?.entries ?? [], [data])
   const summary = data?.summary
+  // feature rows naming a feature id their workbook does not list; an
+  // older backend sends none
+  const outside = useMemo(() => data?.outsideReferences ?? [], [data])
+  // feature rows whose text names another row of the same workbook — an
+  // id problem, so it sits with the other data-quality entries
+  const mismatches = useMemo(() => data?.idMismatches ?? [], [data])
 
   /* The identifier column, per file, so the tables can leave the id out of
      the description they print beside it. */
@@ -304,8 +311,10 @@ export function CoveragePage() {
     missing_in_system: entries.filter(e => e.status === 'missing_in_system').length,
     missing_in_feature: entries.filter(e => e.status === 'missing_in_feature').length,
     covered: entries.filter(e => e.status === 'covered').length,
-    quality: entries.filter(e => e.duplicate || e.status === 'unresolved').length,
-  }), [entries])
+    outside: outside.length,
+    quality: entries.filter(e => e.duplicate || e.status === 'unresolved').length
+      + mismatches.length,
+  }), [entries, outside, mismatches])
 
   const shown = useMemo(() => {
     const needle = search.trim().toLowerCase()
@@ -323,6 +332,20 @@ export function CoveragePage() {
     })
   }, [entries, tab, search, idColumnOf])
 
+  const shownOutside = useMemo(() => {
+    const needle = search.trim().toLowerCase()
+    if (!needle) return outside
+    return outside.filter(r => [r.id, r.names, r.text, r.fileName]
+      .some(v => v.toLowerCase().includes(needle)))
+  }, [outside, search])
+
+  const shownMismatches = useMemo(() => {
+    const needle = search.trim().toLowerCase()
+    if (!needle) return mismatches
+    return mismatches.filter(r => [r.id, r.names, r.text, r.fileName]
+      .some(v => v.toLowerCase().includes(needle)))
+  }, [mismatches, search])
+
   const gaps = (summary?.missingInSystem ?? 0) + (summary?.missingInFeature ?? 0)
   const relatedLabel = summary?.relatedFamily
     ? `Related ${summary.relatedFamily} ids` : 'Related ids'
@@ -336,12 +359,12 @@ export function CoveragePage() {
       <Breadcrumbs items={[
         { label: 'Applications', to: '/apps' },
         { label: appId, to: withRelease(`/apps/${appId}`, activeId) },
-        { label: 'Coverage' },
+        { label: 'Traceability' },
       ]} />
 
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
-        <PageTitle lede="Every feature planned for this release should be covered by a system requirement, and every item in system scope should be represented at feature level. Both directions are checked here, on the identifier in each workbook's first column.">
-          Feature ↔ System coverage
+        <PageTitle lede="How this release's testing types trace to one another, checked on the identifier in each workbook's first column.">
+          Traceability
         </PageTitle>
         <div className="flex items-center gap-2">
           <ReleaseSwitcher
@@ -378,16 +401,26 @@ export function CoveragePage() {
 
       {!loading && data && !data.errorCode && summary && (
         <div className="space-y-5">
+          {/* one section per pair of testing types; Feature ↔ System is the
+              only pair today */}
+          <div>
+            <h2 className="text-[15px] font-semibold tracking-tight">Feature ↔ System</h2>
+            <p className="text-[12.5px] text-muted mt-0.5 max-w-[72ch]">
+              Every feature planned for this release should be covered by a system
+              requirement, and every item in system scope should be represented at
+              feature level. Both directions are checked.
+            </p>
+          </div>
           <Warnings items={data.warnings} />
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-4">
             <PctTile
-              label="Feature → System"
+              label="Features with a system test"
               value={summary.forwardCoveragePct}
               sub={`${fmt(summary.covered)} of ${fmt(summary.featureTotal)} features verified`}
             />
             <PctTile
-              label="System → Feature"
+              label="System items in the feature plan"
               value={summary.backwardCoveragePct}
               sub={`${fmt(summary.covered)} of ${fmt(summary.systemTotal)} system items planned`}
             />
@@ -399,8 +432,9 @@ export function CoveragePage() {
             />
             <KpiTile
               label="Data quality"
-              value={summary.duplicates + summary.unresolved}
-              sub={`${fmt(summary.duplicates)} duplicate · ${fmt(summary.unresolved)} unreadable`}
+              value={summary.duplicates + summary.unresolved + mismatches.length}
+              sub={`${fmt(summary.duplicates)} duplicate · ${fmt(summary.unresolved)} unreadable`
+                + (mismatches.length ? ` · ${fmt(mismatches.length)} id mismatch` : '')}
             />
           </div>
 
@@ -544,6 +578,35 @@ export function CoveragePage() {
             </Table>
           )}
 
+          {/* A feature row naming a feature id its own workbook does not list.
+              Nothing is wrong with the file — FL-5786 naming FL-5651 reads as
+              the earlier feature it follows on from — so it is not one of the
+              workbook's warnings; it is a question about this release's scope.
+              Never matched on, so it moves no figure above. */}
+          {tab === 'outside' && (
+            <Table
+              head={['ID', 'Refers to', 'Where it says so', 'File']}
+              note="Read from the feature rows' own text and never counted as a match or a gap. If these are earlier features the work follows on from, nothing is wrong; if they belong in this release, they are missing from it."
+            >
+              {shownOutside.length ? shownOutside.map((r, i) => (
+                <tr key={`${r.fileName}:${r.id}:${r.names}:${i}`} className={TR}>
+                  <td className="px-4 py-2.5 align-top font-semibold whitespace-nowrap">{r.id}</td>
+                  <td className="px-4 py-2.5 align-top whitespace-nowrap">
+                    <span className="rounded-md bg-warning/15 text-warn-text px-1.5 py-0.5 text-[12px] font-semibold">
+                      {r.names}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 align-top text-ink2">{r.text}</td>
+                  <td className="px-4 py-2.5 align-top text-[11.5px] text-muted whitespace-nowrap">{r.fileName}</td>
+                </tr>
+              )) : outside.length ? empty : (
+                <tr><td colSpan={4} className="px-4 py-8 text-center text-muted">
+                  No feature row refers to a feature its workbook does not list.
+                </td></tr>
+              )}
+            </Table>
+          )}
+
           {/* An unreadable id is absent from *both* directions, which is
               precisely how a coverage report reaches 100% while being wrong.
               It stays visible rather than being quietly dropped. */}
@@ -552,6 +615,22 @@ export function CoveragePage() {
               head={['ID', 'Problem', 'Where', 'Effect on coverage']}
               note="A group filled down from one row counts as one occurrence, not a duplicate — that is the parser carrying a sparse leading column, not the sheet repeating itself."
             >
+              {/* problems first: the row is matched on its first column, and
+                  if that id is the stale half the match is someone else's */}
+              {shownMismatches.map((r, i) => (
+                <tr key={`mm:${r.fileName}:${r.id}:${r.names}:${i}`} className={TR}>
+                  <td className="px-4 py-2.5 align-top font-semibold whitespace-nowrap">{r.id}</td>
+                  <td className="px-4 py-2.5 align-top">
+                    Its text names {r.names}, a separate row in this workbook
+                    <span className="block text-[11.5px] text-muted mt-0.5">“{r.text}”</span>
+                  </td>
+                  <td className="px-4 py-2.5 align-top text-[11.5px] text-muted">{r.fileName} · feature</td>
+                  <td className="px-4 py-2.5 align-top">
+                    Matched as {r.id}. If that id is the stale half, the match and this
+                    row’s links belong to {r.names}.
+                  </td>
+                </tr>
+              ))}
               {shown.length ? shown.map(e => {
                 const row = e.feature ?? e.system
                 const side = e.feature ? 'feature' : 'system'
@@ -574,7 +653,7 @@ export function CoveragePage() {
                     </td>
                   </tr>
                 )
-              }) : empty}
+              }) : shownMismatches.length ? null : empty}
             </Table>
           )}
         </div>
