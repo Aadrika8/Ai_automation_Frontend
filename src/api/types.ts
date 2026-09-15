@@ -779,3 +779,54 @@ export interface AutomationTrendResponse {
   reference: AutomationReference
   measuredReleases: number
 }
+
+/* --- release QA report ---------------------------------------------------- */
+
+/** One point in the report, and the pages it came from. */
+export interface ReportPoint {
+  text: string
+  /** pyramid | traceability | automation | layer:<id> */
+  sources: string[]
+  /** a line the app added from the data because the draft left it out */
+  added?: boolean
+}
+
+export interface ReportRisk extends ReportPoint {
+  severity: 'high' | 'medium' | 'low'
+}
+
+export interface QAReportBody {
+  summary: string
+  findings: ReportPoint[]
+  gaps: ReportPoint[]
+  risks: ReportRisk[]
+  recommendations: ReportPoint[]
+}
+
+export interface SavedReport {
+  id: string
+  createdAt: string
+  createdBy: string
+  model: string
+  releaseName: string
+  /** the month the release's data describes, "2026-09" */
+  period: string
+  /** layer id -> name, to label a layer source */
+  layerNames: Record<string, string>
+  report: QAReportBody
+  /** figures the report uses that the release's data does not hold */
+  unverified: string[]
+  /** what every report must cover and this one left out */
+  notCovered: string[]
+  /** what the draft left out and the app added from the data */
+  addedFromData: string[]
+}
+
+export interface ReportResponse {
+  /** false when the server has no OpenAI key */
+  configured: boolean
+  model: string
+  report: SavedReport | null
+  /** the data has changed since the report was written */
+  stale: boolean
+}

@@ -8,6 +8,7 @@ import { LayersPage } from './pages/LayersPage'
 import { LayerPage } from './pages/LayerPage'
 import { CoveragePage } from './pages/CoveragePage'
 import { BenchmarkPage } from './pages/BenchmarkPage'
+import { ReportPage } from './pages/ReportPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { UsersPage } from './pages/UsersPage'
 
@@ -28,6 +29,7 @@ export default function App() {
               {/* the page’s earlier address, kept so old links still open it */}
               <Route path="/apps/:appId/coverage" element={<CoveragePage />} />
               <Route path="/apps/:appId/benchmark" element={<BenchmarkPage />} />
+              <Route path="/apps/:appId/report" element={<ReportPage />} />
 
               {/* Admin only */}
               <Route element={<RequireRole minRole="admin" />}>

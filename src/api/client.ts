@@ -10,7 +10,7 @@ import type {
   LayerFileInfo, SnapshotInfo, SnapshotPeriod, SnapshotRequest, SnapshotRunResult,
   SourceStatus, User, UserCreate,
   CoverageResponse, TraceConfig, TraceConfigUpdate, TracePreview,
-  AutomationCoverageResponse, AutomationTrendResponse,
+  AutomationCoverageResponse, AutomationTrendResponse, ReportResponse,
 } from './types'
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
@@ -306,6 +306,20 @@ export function coverageCsvUrl(appId: string, releaseId: string): string {
   return `${BASE}/api${rel(appId, releaseId)}/traceability.csv`
 }
 */
+
+/* --- release QA report ----------------------------------------------------
+   Written by OpenAI on the server from the release's own figures, and saved.
+   Reading returns the last one; generating makes a new, paid call. */
+
+// GET /api/apps/{appId}/releases/{releaseId}/report
+export function getReport(appId: string, releaseId: string): Promise<ReportResponse> {
+  return request(`${rel(appId, releaseId)}/report`)
+}
+
+// POST /api/apps/{appId}/releases/{releaseId}/report (qa)
+export function generateReport(appId: string, releaseId: string): Promise<ReportResponse> {
+  return request(`${rel(appId, releaseId)}/report`, { method: 'POST' })
+}
 
 /* --- benchmark: automation coverage ------------------------------------
 
