@@ -15,8 +15,10 @@ const ROLE_LABEL: Record<string, string> = { admin: 'Admin', qa: 'QA', manager: 
 function parentPath(pathname: string, search: string): string | null {
   if (pathname === '/apps') return null
   if (pathname.startsWith('/apps/')) {
-    const segments = pathname.split('/').filter(Boolean) // ['apps', appId, 'layers', layerId]
-    if (segments.length < 4) return '/apps'
+    // ['apps', appId] is the application's own page; anything deeper — a layer
+    // ('layers', layerId), traceability, benchmark, report — goes up to it.
+    const segments = pathname.split('/').filter(Boolean)
+    if (segments.length < 3) return '/apps'
     const release = new URLSearchParams(search).get('release')
     return release
       ? `/apps/${segments[1]}?release=${encodeURIComponent(release)}`

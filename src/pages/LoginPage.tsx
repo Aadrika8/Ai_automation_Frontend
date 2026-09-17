@@ -4,11 +4,23 @@ import { useAuth } from '../auth/AuthContext'
 import { Card } from '../components/ui'
 import { PyramidLogo } from '../components/icons'
 
-const DEMO_USERS = [
-  { u: 'manager', p: 'manager123', label: 'Manager' },
-  { u: 'qa', p: 'qa123', label: 'QA' },
-  { u: 'admin', p: 'admin123', label: 'Admin' },
-]
+/** Click-to-fill demo accounts, for local development only. They come from
+    VITE_DEMO_LOGINS ("manager:pw,qa:pw,admin:pw") and only on the dev server,
+    so no password is written into the source or into a production build. */
+function demoUsers(): Array<{ u: string; p: string; label: string }> {
+  if (!import.meta.env.DEV) return []
+  const raw = String(import.meta.env.VITE_DEMO_LOGINS ?? '').trim()
+  if (!raw) return []
+  return raw.split(',').flatMap(entry => {
+    const at = entry.indexOf(':')
+    if (at <= 0) return []
+    const u = entry.slice(0, at).trim()
+    const p = entry.slice(at + 1).trim()
+    return u && p ? [{ u, p, label: u.charAt(0).toUpperCase() + u.slice(1) }] : []
+  })
+}
+
+const DEMO_USERS = demoUsers()
 
 export function LoginPage() {
   const { user, login } = useAuth()
@@ -81,20 +93,22 @@ export function LoginPage() {
             </button>
           </form>
         </Card>
-        <div className="mt-4 text-center">
-          <div className="text-[11.5px] text-muted mb-2">Demo accounts — click to fill</div>
-          <div className="flex justify-center gap-2">
-            {DEMO_USERS.map(d => (
-              <button
-                key={d.u}
-                onClick={() => { setUsername(d.u); setPassword(d.p); setError(null) }}
-                className="text-xs px-3 py-1.5 rounded-full bg-surface border border-hairline text-ink2 hover:border-accent hover:text-accent transition-colors"
-              >
-                {d.label}
-              </button>
-            ))}
+        {DEMO_USERS.length > 0 && (
+          <div className="mt-4 text-center">
+            <div className="text-[11.5px] text-muted mb-2">Demo accounts — click to fill</div>
+            <div className="flex justify-center gap-2">
+              {DEMO_USERS.map(d => (
+                <button
+                  key={d.u}
+                  onClick={() => { setUsername(d.u); setPassword(d.p); setError(null) }}
+                  className="text-xs px-3 py-1.5 rounded-full bg-surface border border-hairline text-ink2 hover:border-accent hover:text-accent transition-colors"
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

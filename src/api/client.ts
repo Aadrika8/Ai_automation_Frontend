@@ -13,7 +13,21 @@ import type {
   AutomationCoverageResponse, AutomationTrendResponse, ReportResponse,
 } from './types'
 
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+/** The API's address, from VITE_API_URL at build time. A production build
+    without one fails here, loudly, instead of quietly calling localhost from
+    every browser that opens it. Only the dev server falls back to the
+    backend's default port. */
+function apiBase(): string {
+  const configured = String(import.meta.env.VITE_API_URL ?? '').trim()
+  if (configured) return configured.replace(/\/+$/, '')
+  if (import.meta.env.DEV) return 'http://localhost:8000'
+  throw new Error(
+    'VITE_API_URL is not set: this build has no API address. ' +
+    'Set it in .env before running the production build.',
+  )
+}
+
+const BASE = apiBase()
 const SESSION_KEY = 'qi.session'
 
 function readToken(): string | null {
